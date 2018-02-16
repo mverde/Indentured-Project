@@ -12,13 +12,6 @@ def getLocations(coordinates, rad):
     return  gmaps.places_nearby(location=coordinates, radius=rad)
 
 '''
-Global variables.
-'''
-DEFAULT_SEARCH_RADIUS_MILES = 0.25
-DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
-EARTH_RADIUS_METERS = 6371000
-
-'''
 Google Maps Client interface object. In production, the API key should be
 stored locally.
 '''
@@ -34,6 +27,13 @@ def metersToLongitude(meters, latitude):
     return 111320*math.cos(math.radians(latitude))*meters
 
 '''
+Global variables.
+'''
+DEFAULT_SEARCH_RADIUS_MILES = 0.25
+DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
+EARTH_RADIUS_METERS = 6371000
+
+'''
 Functions to get new latitude and longitude coordinates by adding meters to 
 old coordinates. This necessitates scaling and wrap-around handling for
 longitude conversions. Following established convention, we treat negative
@@ -41,16 +41,16 @@ meters as going South/West and vice versa. Note that latPlusMeters does not
 handle situations where the new latitude would cross one of the poles.
 '''
 def latPlusMeters(latitude, meters):
-    return latitude + (meters / EARTH_RADIUS_METERS) * (180.0 / math.pi);
+    return latitude + (meters * 1.0 / EARTH_RADIUS_METERS) * (180.0 / math.pi);
 
 def longPlusMeters(longitude, latitude, meters):
-    longToAdd = (meters / EARTH_RADIUS_METERS) * (180.0 / math.pi) / math.cos(latitude * math.pi / 180.0)
+    longToAdd = (meters * 1.0 / EARTH_RADIUS_METERS) * (180.0 / math.pi) / math.cos(latitude * math.pi / 180.0)
     newLong = longitude + longToAdd
 
     if newLong > 180.0:
         return -180.0 + (newLong - 180.0)
     elif newLong < -180.0:
-        return 180.0 - (newLong + 180.0)
+        return 180 + (newLong + 180)
     
     return newLong
 
@@ -118,5 +118,3 @@ def main():
     print searchAreaAlgorithm(34, -118 , 1000)
 
 main()
-
-
