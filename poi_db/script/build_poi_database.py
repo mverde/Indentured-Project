@@ -17,9 +17,11 @@ defaultSearchRadiusInMiles = 0.25
 defaultSearchRadius = milesToMeters(defaultSearchRadiusInMiles)
 degreeDelta = 10
 
-def searchAreaAlgorithm(startLat, startLong, endLat, endLong, radius):
+def searchAreaAlgorithm(latitude, longitude, radius):
     # input: starting & ending coordinates & radius of circle
-
+    startLat = latitude + metersToLatitude(milesToMeters(radius))
+    startLong = longitude + metersToLongitude(milesToMeters(radius))
+    
     currentLat = startLat + metersToLatitude(defaultSearchRadius)
     currentLong = startLong - metersToLatitude(defaultSearchRadius)
     searchResults = []
@@ -41,7 +43,7 @@ def addToDB(place, latitude, longitude, typeOfPlace):
 
 def main():
     # print getLocations((34.0537136,-118.24265330000003), 1)['results'];
-    print searchAreaAlgorithm(34, -118, 1)
+    print searchAreaAlgorithm(34, -118 , 1000)
     
 
 main()
