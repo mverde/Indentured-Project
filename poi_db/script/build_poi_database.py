@@ -19,12 +19,18 @@ degreeDelta = 10
 
 def searchAreaAlgorithm(latitude, longitude, radius):
     # input: starting & ending coordinates & radius of circle
-    startLat = latitude + metersToLatitude(milesToMeters(radius))
-    startLong = longitude + metersToLongitude(milesToMeters(radius))
-    
+    startLat = latitude - metersToLatitude(milesToMeters(radius))
+    startLong = longitude + metersToLongitude(milesToMeters(radius), startLat)
+    endLat = latitude + metersToLatitude(milesToMeters(radius))
+    endLong = longitude - metersToLongitude(milesToMeters(radius), startLat)
+
+    print ("start lat: ", startLat, " startLong: ", startLong, "endLat: ", endLat, " endLong: ", endLong)
+
     currentLat = startLat + metersToLatitude(defaultSearchRadius)
-    currentLong = startLong - metersToLatitude(defaultSearchRadius)
+    currentLong = startLong - metersToLongitude(defaultSearchRadius, currentLat)
     searchResults = []
+
+    print ("current lat: ", currentLat, " currentLong: ", currentLong)
 
     while(currentLong < endLong):  
         while(currentLat < endLat):
@@ -43,7 +49,8 @@ def addToDB(place, latitude, longitude, typeOfPlace):
 
 def main():
     # print getLocations((34.0537136,-118.24265330000003), 1)['results'];
-    print searchAreaAlgorithm(34, -118 , 1000)
+    # print gmaps.places_nearby(location=(34.0537136,-118.24265330000003), radius=defaultSearchRadius)['results']
+    print searchAreaAlgorithm(34, -118, 1000)
     
 
 main()
