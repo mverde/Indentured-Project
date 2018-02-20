@@ -1,5 +1,5 @@
 import googlemaps
-#import MySQLdb
+import MySQLdb
 import math
 
 ###places_dict = gmaps.places('', (34.0537136,-118.24265330000003), 10000)
@@ -142,7 +142,7 @@ def filterResults(results):
     # return results of type x,y,z 
     return 0
 
-'''def addToDB(array):
+def addToDB(array):
     #input: locations array - add to db all at once    
     # db columns: index, place, coordinate(lat, longitude), type
 
@@ -167,10 +167,10 @@ def filterResults(results):
             # print ("*** NAME OF THING ***" + entry['name'])
             placeName = entry['name']
             lat = entry['geometry']['location']['lat']
-            long = entry['geometry']['location']['long']
+            lng = entry['geometry']['location']['lng']
 
             try:
-                params = (placeName, lat, long)
+                params = (placeName, lat, lng)
                 cursor.execute("""
                     INSERT INTO test 
                     VALUES
@@ -181,10 +181,10 @@ def filterResults(results):
             except:
                 db.rollback()
     db.close()
-    return'''
+    return
 
 def main():
-    #addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
+    addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
     #print searchArea(34, -118 , 1000)
     searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
 
