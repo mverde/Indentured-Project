@@ -71,10 +71,10 @@ def addToDB(array):
             # print ("*** NAME OF THING ***" + entry['name'])
             placeName = entry['name']
             lat = entry['geometry']['location']['lat']
-            long = entry['geometry']['location']['long']
+            lng = entry['geometry']['location']['lng']
 
             try:
-                params = (placeName, lat, long)
+                params = (placeName, lat, lng)
                 cursor.execute("""
                     INSERT INTO test 
                     VALUES
@@ -89,7 +89,7 @@ def addToDB(array):
 
 def main():
     addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
-    print searchAreaAlgorithm(34, -118 , 1000)
+    # print searchAreaAlgorithm(34, -118 , 1000)
 
 main()
 
