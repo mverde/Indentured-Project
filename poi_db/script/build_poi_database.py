@@ -23,7 +23,7 @@ def milesToMeters(miles):
 '''
 Global variables.
 '''
-DEFAULT_GRID_SQUARE_LENGTH_METERS = 1000
+DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(1)
 DEFAULT_SEARCH_RADIUS_MILES = 0.25
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
@@ -73,7 +73,9 @@ def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
     return gridCenters
 
 def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
-    gridSquareSearchRadius = math.sqrt(2.0 * math.pow((radius * 1.0) / gridSquareLength, 2)) / 2
+    # returns array of places
+
+    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
     
     searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
     locations = []
@@ -82,40 +84,41 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
         print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
         locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
     
-    for item in locations:
-        print (item)
+    return locations
         
 def getResults(lat, long, searchRadius):
+    # helper function to return the list of places; there can be overlap. 
+
     places = []
     places1 = gmaps.places_nearby(location=(lat,long), radius=searchRadius)
-    
-    for place in places1['results']:
-        places.append([place['name'], place['geometry']['location']['lat'], place['geometry']['location']['lng'], place['types']])
 
+    for place in places1['results']:
+        places.append(place)
+    
     x=0
     y=0
     
     if('next_page_token' in places1):
-        print "yes, there is a next page token for places 1"
+        print "Yes, there is a next page token for places 1"
         while(x < 50):
             try:
                 next_page = "" + places1['next_page_token'].encode('ascii','ignore')
                 places2 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
                 
                 for place in places2['results']:
-                    places.append([place['name'], place['geometry']['location']['lat'], place['geometry']['location']['lng'], place['types'] ])
+                    places.append(place)
                 
                 x += 1
 
                 if('next_page_token' in places2):
-                    print "yes, there is a next page token for places 2"
+                    print "Yes, there is a next page token for places 2"
                     while(y < 50):
                         try:
                             next_page = "" + places2['next_page_token'].encode('ascii','ignore')
                             places3 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
                             
                             for place in places3['results']:
-                                places.append([place['name'], place['geometry']['location']['lat'], place['geometry']['location']['lng'], place['types']])
+                                places.append(place)
                             
                             return places
                         except (KeyError, googlemaps.exceptions.ApiError) as e:
@@ -124,7 +127,7 @@ def getResults(lat, long, searchRadius):
                             y += 1
                             continue
                 else:
-                    print "there is no next page token for places 2, end results"
+                    print "There is no next page token for places 2, end results"
                     return places
 
             except (KeyError, googlemaps.exceptions.ApiError) as e:
@@ -133,7 +136,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
                 continue
     else:
-        print "there is no next page token for places 1, end results."
+        print "There is no next page token for places 1, end results."
         return places
 
     return places
@@ -188,8 +191,8 @@ def addToDB(array):
     return
 
 def main():
-    addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
+    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
     #print searchArea(34, -118 , 1000)
-    #searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
+    searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
 
 main()
