@@ -1,0 +1,115 @@
+('Grid Center: ', '34.0663775995,-118.257941173')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0663775995,-118.247084904')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0663775995,-118.236228634')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0663775995,-118.225372365')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0573843835,-118.257941173')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0573843835,-118.247086056')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0573843835,-118.236230938')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0573843835,-118.225375821')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0483911674,-118.257941173')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0483911674,-118.247087207')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0483911674,-118.236233241')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0483911674,-118.225379276')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0393979514,-118.257941173')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0393979514,-118.247088358')
+there is no next page token for places 1, end results.
+
+('Grid Center: ', '34.0393979514,-118.236235543')
+there is no next page token for places 1, end results.
+
+
+
+('Grid Center: ', '34.0393979514,-118.225382728')
+there is no next page token for places 1, end results.
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Echo Park', 34.0781593, -118.2605574, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Old Chinatown', 34.0661049, -118.2369467, [u'neighborhood', u'shopping_mall', u'political', u'point_of_interest', u'establishment']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]
+
+[u'Los Angeles', 34.0522342, -118.2436849, [u'locality', u'political']]
+
+[u'Central LA', 34.0686748, -118.3228165, [u'neighborhood', u'political']]

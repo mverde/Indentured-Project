@@ -27,6 +27,9 @@ DEFAULT_GRID_SQUARE_LENGTH_METERS = 1000
 DEFAULT_SEARCH_RADIUS_MILES = 0.25
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
+# TYPES_OF_PLACES = ['restaurant', 'retail', 'entertainment', 'establishment', 'food', 'point of interest', 'cafe']
+
+
 
 '''
 Functions to get new latitude and longitude coordinates by adding meters to 
@@ -73,8 +76,71 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
     gridSquareSearchRadius = math.sqrt(2.0 * math.pow((radius * 1.0) / gridSquareLength, 2)) / 2
     
     searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
+    locations = []
+    
     for gridCenter in searchGrid:
-        print (str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
+    
+    for item in locations:
+        print (item)
+        
+def getResults(lat, long, searchRadius):
+    places = []
+    places1 = gmaps.places_nearby(location=(lat,long), radius=searchRadius)
+    
+    for place in places1['results']:
+        places.append([place['name'], place['geometry']['location']['lat'], place['geometry']['location']['lng'], place['types']])
+
+    x=0
+    y=0
+    
+    if('next_page_token' in places1):
+        print "yes, there is a next page token for places 1"
+        while(x < 50):
+            try:
+                next_page = "" + places1['next_page_token'].encode('ascii','ignore')
+                places2 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
+                
+                for place in places2['results']:
+                    places.append([place['name'], place['geometry']['location']['lat'], place['geometry']['location']['lng'], place['types'] ])
+                
+                x += 1
+
+                if('next_page_token' in places2):
+                    print "yes, there is a next page token for places 2"
+                    while(y < 50):
+                        try:
+                            next_page = "" + places2['next_page_token'].encode('ascii','ignore')
+                            places3 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
+                            
+                            for place in places3['results']:
+                                places.append([place['name'], place['geometry']['location']['lat'], place['geometry']['location']['lng'], place['types']])
+                            
+                            return places
+                        except (KeyError, googlemaps.exceptions.ApiError) as e:
+                            #no next page token
+                            print ("Error with fetching results: ", e)
+                            y += 1
+                            continue
+                else:
+                    print "there is no next page token for places 2, end results"
+                    return places
+
+            except (KeyError, googlemaps.exceptions.ApiError) as e:
+                # no next page token
+                print ("Error with fetching results: ", e)
+                x += 1
+                continue
+    else:
+        print "there is no next page token for places 1, end results."
+        return places
+
+    return places
+
+def filterResults(results):
+    # return results of type x,y,z 
+    return 0
 
 def addToDB(array):
     #input: locations array - add to db all at once    
@@ -91,7 +157,7 @@ def addToDB(array):
     cursor.execute('CREATE DATABASE IF NOT EXISTS pois');
     cursor.execute('USE pois')
     cursor.execute("DROP TABLE IF EXISTS test")
-    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL)")
+    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
     # ================= Parse array ================= #
     for entry in array:
@@ -102,13 +168,17 @@ def addToDB(array):
             placeName = entry['name']
             lat = entry['geometry']['location']['lat']
             lng = entry['geometry']['location']['lng']
+            types_list = entry['types']
+            types = ",".join(types_list)
 
             try:
-                params = (placeName, lat, lng)
+                params = (placeName, lat, lng, types)
                 cursor.execute("""
                     INSERT INTO test 
                     VALUES
-                        (%s, %s, %s)
+                        (%s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                    types=GREATEST(types,VALUES(types))
                         """, params)
 
                 db.commit()
@@ -120,5 +190,6 @@ def addToDB(array):
 def main():
     addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
     #print searchArea(34, -118 , 1000)
-    #searchArea(34.0537136, -118.24265330000003, 20000)
+    #searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
+
 main()
