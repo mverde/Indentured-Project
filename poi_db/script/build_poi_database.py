@@ -157,7 +157,7 @@ def addToDB(array):
     cursor.execute('CREATE DATABASE IF NOT EXISTS pois');
     cursor.execute('USE pois')
     cursor.execute("DROP TABLE IF EXISTS test")
-    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT)")
+    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
     # ================= Parse array ================= #
     for entry in array:
@@ -177,6 +177,8 @@ def addToDB(array):
                     INSERT INTO test 
                     VALUES
                         (%s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                    types=GREATEST(types,VALUES(types))
                         """, params)
 
                 db.commit()
