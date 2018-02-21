@@ -157,7 +157,7 @@ def addToDB(array):
     cursor.execute('CREATE DATABASE IF NOT EXISTS pois');
     cursor.execute('USE pois')
     cursor.execute("DROP TABLE IF EXISTS test")
-    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL)")
+    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT)")
 
     # ================= Parse array ================= #
     for entry in array:
@@ -168,13 +168,15 @@ def addToDB(array):
             placeName = entry['name']
             lat = entry['geometry']['location']['lat']
             lng = entry['geometry']['location']['lng']
+            types_list = entry['types']
+            types = ",".join(types_list)
 
             try:
-                params = (placeName, lat, lng)
+                params = (placeName, lat, lng, types)
                 cursor.execute("""
                     INSERT INTO test 
                     VALUES
-                        (%s, %s, %s)
+                        (%s, %s, %s, %s)
                         """, params)
 
                 db.commit()
@@ -186,6 +188,6 @@ def addToDB(array):
 def main():
     addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
     #print searchArea(34, -118 , 1000)
-    searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
+    #searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
 
 main()
