@@ -15,7 +15,7 @@ struct Place
 	double latitude;
 	double longitude;
 	string type;
-}
+};
 
 // Split by delimiter function obtained from: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
 
@@ -38,7 +38,7 @@ vector<string> split(const string &s, char delim) {
 class ServerCall
 {
 	// Constructor; Parameters not specified yet
-	ServerCall(int options);
+	ServerCall(int options = 0);
 
 	// This function will find all locations within a square of side length 2*maxRange centered around the specified coordinate
 	vector<Place> queryDatabase(double latitude, double longitude, double maxRange);
@@ -47,13 +47,13 @@ class ServerCall
 	// And will return results that follow the filtering rules, which are to be specified in CNF format:
 	// Filter array: [[filter1,filter2,filter3][filter4][filter5,filter6]] will return places that has 
 	// [filter1 OR filter2 OR filter3] AND [filter4] AND [filter5 OR filter6]
-	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string[][] filters);
+	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters);
 	
 	// SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
 	// Additionally, only places that satisfy the filters will be accepted in the output
 	// This function will return a vector of Places that meet the requirements, which are specified in CNF format
-	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string[][] filters);
-}
+	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters);
+};
 
 // The constructor will set up a connection with the AWS server to allow for database querying
 ServerCall::ServerCall(int options)
@@ -97,9 +97,9 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 			if(i == 0)
 				tempPlace.name = *stringIterator;
 			else if (i == 1)
-				tempPlace.latitude = *stringIterator;
+				tempPlace.latitude = stod(*stringIterator);
 			else if (i == 2)
-				tempPlace.longitude = *stringIterator;
+				tempPlace.longitude = stod(*stringIterator);
 			else if (tempPlace.type == "")
 				tempPlace.type = *stringIterator;
 			else
@@ -116,7 +116,7 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 // SearchByCoordinate will find at most numPlaces that are in maxRange radius from the specified coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
-vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string[][] filters)
+vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters)
 {
 	// This is where we will store places that meet the required criteria
 	vector<Place> outputPlaces;
@@ -124,7 +124,7 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	vector<Place> dbPlaceVec = queryDatabase(latitude, longitude, maxRange);
 
 	// Now we need to filter the results in dbPlaceVec based on the input filters
-	
+
 
 	return outputPlaces;
 }
@@ -132,11 +132,16 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 // SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
-vector<Place> ServerCall::SearchByLine(double initLongitude, double initLatitude, double endLongitude, double endLatitude, int numPlaces, string[][] filters)
+vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters)
 {
 	vector<Place> outputPlaces;
 
 	// To be implemented
 
 	return outputPlaces;
+}
+
+int main()
+{
+
 }
