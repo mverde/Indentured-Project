@@ -149,14 +149,14 @@ def addToDB(array):
 
     #  ========== For Albert  ========== #
 
-    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-    #                 user="escality_user",
-    #                 passwd="12345678")
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+                    user="escality_user",
+                    passwd="12345678")
 
     #  ========= For Melissa  ========= #
-    db = pymysql.connect(host= "localhost",
-                user="root",
-                passwd="password")
+    # db = pymysql.connect(host= "localhost",
+    #             user="root",
+    #             passwd="password")
     #  ================= End Connect to DB  ================= #
 
     cursor = db.cursor()
@@ -212,6 +212,8 @@ def main():
     centerLong = float(sys.argv[2])
     searchRadius = float(sys.argv[3])
     
-    addToDB(searchArea(centerLat, centerLong, searchRadius))
-
+    if searchRadius >= 250:
+        addToDB(searchArea(centerLat, centerLong, searchRadius))
+    else:
+        print ("Usage: search radius must be >= 250 meters")
 main()

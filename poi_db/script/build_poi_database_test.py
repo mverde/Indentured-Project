@@ -38,14 +38,16 @@ def test_createSearchGrid_creates_correct_grid():
 def test_addToDB():
     #  ================= For Albert  ================= #
 
-    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-    #             user="escality_user",
-    #             passwd="12345678")
-    
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+                user="escality_user",
+                passwd="12345678")
+
     #  ================= For Melissa  ================= #
-    db = pymysql.connect(host= "localhost",
-                    user="root",
-                    passwd="password")
+    # db = pymysql.connect(host= "localhost",
+    #                 user="root",
+    #                 passwd="password")
+
+   #  =============================== ================= #                 
     cursor = db.cursor()
     cursor.execute('USE escality_location_db')
     cursor.execute('SELECT * from test')
