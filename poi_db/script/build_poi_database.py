@@ -1,15 +1,7 @@
 import googlemaps
-import MySQLdb
+# import MySQLdb
+import pymysql.cursors
 import math
-
-###places_dict = gmaps.places('', (34.0537136,-118.24265330000003), 10000)
-# places_dict = gmaps.places_nearby(location=(34.0537136,-118.24265330000003), radius=1)
-# print places_dict['results']
-
-def getLocations(coordinates, rad):
-    # input: coordinates (latitude,longitude), radius
-    # output: dict of locations
-    return  gmaps.places_nearby(location=coordinates, radius=rad)
 
 '''
 Google Maps Client interface object. In production, the API key should not be
@@ -23,12 +15,10 @@ def milesToMeters(miles):
 '''
 Global variables.
 '''
-DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(1)
-DEFAULT_SEARCH_RADIUS_MILES = 0.25
+DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(0.13)
+DEFAULT_SEARCH_RADIUS_MILES = 0.13
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
-# TYPES_OF_PLACES = ['restaurant', 'retail', 'entertainment', 'establishment', 'food', 'point of interest', 'cafe']
-
 
 
 '''
@@ -53,6 +43,8 @@ def longPlusMeters(longitude, latitude, meters):
     return newLong
 
 def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
+    if radius < gridSquareLength:
+        return []
     startLat = latPlusMeters(centerLat, radius)
     startLong = longPlusMeters(centerLong, startLat, -radius)
     squaresPerRow = int(math.ceil((2.0 * radius) / gridSquareLength))
@@ -71,20 +63,6 @@ def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
         nextGridCenter = (nextLat, startLong)
     
     return gridCenters
-
-def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
-    # returns array of places
-
-    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
-    
-    searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
-    locations = []
-    
-    for gridCenter in searchGrid:
-        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
-        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
-    
-    return locations
         
 def getResults(lat, long, searchRadius):
     # helper function to return the list of places; there can be overlap. 
@@ -141,6 +119,22 @@ def getResults(lat, long, searchRadius):
 
     return places
 
+def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
+    # returns array of places
+    if radius < gridSquareLength:
+        return []
+
+    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
+    
+    searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
+    locations = []
+    
+    for gridCenter in searchGrid:
+        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
+    
+    return locations
+
 def filterResults(results):
     # return results of type x,y,z 
     return 0
@@ -153,9 +147,10 @@ def addToDB(array):
     # db = MySQLdb.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
     #                 user="escality_user",
     #                 passwd="12345678")
-    db = MySQLdb.connect(host= "localhost",
+    db = pymysql.connect(host= "localhost",
                 user="root",
                 passwd="password")
+
     cursor = db.cursor()
     # cursor.execute("SET sql_notes = 0; ")       # Suppress warning
 
@@ -194,8 +189,8 @@ def addToDB(array):
     return
 
 def main():
-    addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
+    addToDB(searchArea(34.0537136, -118.24265330000003))
     #print searchArea(34, -118 , 1000)
-    #  addToDB(searchArea(34.0537136, -118.24265330000003, milesToMeters(1)))
+    # searchArea(34.0537136, -118.24265330000003)
 
 main()
