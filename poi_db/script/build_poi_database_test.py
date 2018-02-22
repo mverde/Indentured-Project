@@ -35,6 +35,27 @@ def test_createSearchGrid_creates_correct_grid():
                         (-0.0022483040147968265, 0.0022483039265172927)]
     assert bpdb.createSearchGrid(0.0, 0.0, 1000, 1000) == dummyGridCenters
     
+def test_addToDB_connect():
+    #  ================= For Albert  ================= #
+
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+                user="escality_user",
+                passwd="12345678")
+
+    #  ================= For Melissa  ================= #
+    # db = pymysql.connect(host= "localhost",
+    #                 user="root",
+    #                 passwd="password")
+
+    #  ================================================= #      
+
+    assert(db.open)    
+
+    db.close()
+
+    assert(db.open == 0)            
+
+   #  ================================================= #     
 def test_addToDB_add_data():
     bpdb.addToDB(DB_ARRAY)
     #  ================= For Albert  ================= #

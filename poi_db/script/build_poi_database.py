@@ -10,6 +10,11 @@ stored locally.
 '''
 gmaps = googlemaps.Client(key='AIzaSyBmvB1gGLH0cujfkhQylJu6St3BIqLcvwU')
 
+# def getLocations(coordinates, rad):
+#     # input: coordinates (latitude,longitude), radius
+#     # output: dict of locations
+#     return  gmaps.places_nearby(location=coordinates, radius=rad)
+
 def milesToMeters(miles):
     return miles*1609.34
 
@@ -150,14 +155,14 @@ def addToDB(array):
 
     #  ========== For Albert  ========== #
 
-    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-    #                 user="escality_user",
-    #                 passwd="12345678")
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+                    user="escality_user",
+                    passwd="12345678")
 
     #  ========= For Melissa  ========= #
-    db = pymysql.connect(host= "localhost",
-                user="root",
-                passwd="password")
+    # db = pymysql.connect(host= "localhost",
+    #             user="root",
+    #             passwd="password")
     #  ================= End Connect to DB  ================= #
 
     cursor = db.cursor()
@@ -194,17 +199,11 @@ def addToDB(array):
                 db.commit()
             except:
                 db.rollback()
-    cursor.execute('SELECT * from pois')
-    output = []
-    for row in cursor:
-        row_data = []
-        for data in row:
-            if type(data) is str:
-                row_data.append(str(data))
-            else:
-                row_data.append(float(data))
-        output.append(row_data)
-    print (output)
+                
+     # ================= Close connection to DB  ================= #
+    cursor.close() 
+    db.close()
+ 
     return
 
 def isNumber(s):
@@ -228,4 +227,6 @@ def main():
     else:
         print ("Usage: search radius must be >= 250 meters")
 
+    # ================= Testing for Melissa  ================= #
+    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()
