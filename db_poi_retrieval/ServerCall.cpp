@@ -8,6 +8,8 @@
 #include <vector>
 #include <iterator>
 #include <iostream>
+#include <ctime>
+#include <algorithm>
 
 using namespace std;
 
@@ -189,6 +191,54 @@ vector<Place> filterPlaces(vector<Place> places, string filters)
 	return outputVector;
 }
 
+// This function will select numPlaces for a Place vector randomly
+vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
+{
+	int selectedPlaceIndices [numPlaces];
+	
+	int vectorSize = places.size();
+	// If we request more places than exist in our input vector, simply return the input vector
+	if(numPlaces >= vectorSize)
+		return places;
+
+	// Fill with -1 to avoid issues when checking if an index already exists in the array
+	for(int i = 0; i < numPlaces; i++)
+		selectedPlaceIndices[i] = -1;
+
+	vector<Place> selectedPlaces;
+	srand(time(0));
+	for(int i = 0; i < numPlaces; i++)
+	{
+		// Will select one of the indices of our place vector
+		int currIndex = rand() % vectorSize;
+
+		// Check if this index was already chosen to be in our array
+		bool indexExists = false;
+		for(int j = 0; j < numPlaces; j++)
+		{	
+			// If the selected index is already in our array, set the bool and exit the loop
+			if(selectedPlaceIndices[j] == currIndex)
+			{
+				indexExists = true;
+				break;
+			}
+		}
+
+		// If the index is new, add it to our array
+		if (!indexExists)
+			selectedPlaceIndices[i] = currIndex;
+		else
+		// Otherwise, try again
+			i--;
+	}
+
+	for(int i = 0; i < numPlaces; i++)
+		selectedPlaces.push_back(places[selectedPlaceIndices[i]]);
+
+	return selectedPlaces;
+
+}
+
 // SearchByCoordinate will find at most numPlaces that are in maxRange radius from the specified coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
@@ -208,6 +258,10 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	else
 	//Otherwise, retain all Places
 		outputPlaces = dbPlaceVec;
+
+	// Out of the remaining places, select up to numPlaces to return
+	outputPlaces = randomSelectPlaces(outputPlaces, numPlaces);
+
 	return outputPlaces;
 }
 
@@ -226,7 +280,29 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 int main()
 {
 	ServerCall test = ServerCall(1);
-	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"political");
+	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,2,"");
+
+	// Should return all places returned by the database
+	cout << "Test 1:" << endl;
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	// Should only return places that contain "political" as one of its types
+	cout << endl << "Test 2:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"political");
+
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	// Should only return one place
+	cout << endl << "Test 3:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"");
 
 	for(int i = 0; i < poi.size(); i++)
 	{
