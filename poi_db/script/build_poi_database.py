@@ -1,11 +1,11 @@
 import googlemaps
+<<<<<<< HEAD
 # import MySQLdb
 import pymysql.cursors
+=======
+#import MySQLdb
+>>>>>>> f94566f2a164c092c64d248552dbb735c328e6af
 import math
-
-###places_dict = gmaps.places('', (34.0537136,-118.24265330000003), 10000)
-# places_dict = gmaps.places_nearby(location=(34.0537136,-118.24265330000003), radius=1)
-# print places_dict['results']
 
 def getLocations(coordinates, rad):
     # input: coordinates (latitude,longitude), radius
@@ -28,8 +28,6 @@ DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(0.13)
 DEFAULT_SEARCH_RADIUS_MILES = 0.13
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
-# TYPES_OF_PLACES = ['restaurant', 'retail', 'entertainment', 'establishment', 'food', 'point of interest', 'cafe']
-
 
 
 '''
@@ -54,6 +52,8 @@ def longPlusMeters(longitude, latitude, meters):
     return newLong
 
 def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
+    if radius < gridSquareLength:
+        return []
     startLat = latPlusMeters(centerLat, radius)
     startLong = longPlusMeters(centerLong, startLat, -radius)
     squaresPerRow = int(math.ceil((2.0 * radius) / gridSquareLength))
@@ -72,6 +72,7 @@ def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
         nextGridCenter = (nextLat, startLong)
     
     return gridCenters
+<<<<<<< HEAD
 
 def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
     # returns array of places
@@ -89,6 +90,8 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
         print (place)
 
     return locations
+=======
+>>>>>>> f94566f2a164c092c64d248552dbb735c328e6af
         
 def getResults(lat, long, searchRadius):
     # helper function to return the list of places; there can be overlap. 
@@ -144,6 +147,22 @@ def getResults(lat, long, searchRadius):
         return places
 
     return places
+
+def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
+    # returns array of places
+    if radius < gridSquareLength:
+        return []
+
+    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
+    
+    searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
+    locations = []
+    
+    for gridCenter in searchGrid:
+        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
+    
+    return locations
 
 def filterResults(results):
     # return results of type x,y,z 
