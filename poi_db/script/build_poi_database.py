@@ -1,15 +1,8 @@
+import sys
 import googlemaps
-import MySQLdb
+# import MySQLdb
+import pymysql.cursors
 import math
-
-###places_dict = gmaps.places('', (34.0537136,-118.24265330000003), 10000)
-# places_dict = gmaps.places_nearby(location=(34.0537136,-118.24265330000003), radius=1)
-# print places_dict['results']
-
-def getLocations(coordinates, rad):
-    # input: coordinates (latitude,longitude), radius
-    # output: dict of locations
-    return  gmaps.places_nearby(location=coordinates, radius=rad)
 
 '''
 Google Maps Client interface object. In production, the API key should not be
@@ -17,19 +10,23 @@ stored locally.
 '''
 gmaps = googlemaps.Client(key='AIzaSyBmvB1gGLH0cujfkhQylJu6St3BIqLcvwU')
 
+# def getLocations(coordinates, rad):
+#     # input: coordinates (latitude,longitude), radius
+#     # output: dict of locations
+#     return  gmaps.places_nearby(location=coordinates, radius=rad)
+
 def milesToMeters(miles):
     return miles*1609.34
 
 '''
 Global variables.
 '''
-DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(1)
-DEFAULT_SEARCH_RADIUS_MILES = 0.25
+# Approximate radius that returns ~60 results per query in Downtown LA
+DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(0.13)
+# Approximate radius of LA City
+DEFAULT_SEARCH_RADIUS_MILES = 12.427424
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
-# TYPES_OF_PLACES = ['restaurant', 'retail', 'entertainment', 'establishment', 'food', 'point of interest', 'cafe']
-
-
 
 '''
 Functions to get new latitude and longitude coordinates by adding meters to 
@@ -53,6 +50,8 @@ def longPlusMeters(longitude, latitude, meters):
     return newLong
 
 def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
+    if radius < gridSquareLength:
+        return []
     startLat = latPlusMeters(centerLat, radius)
     startLong = longPlusMeters(centerLong, startLat, -radius)
     squaresPerRow = int(math.ceil((2.0 * radius) / gridSquareLength))
@@ -71,20 +70,6 @@ def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
         nextGridCenter = (nextLat, startLong)
     
     return gridCenters
-
-def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
-    # returns array of places
-
-    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
-    
-    searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
-    locations = []
-    
-    for gridCenter in searchGrid:
-        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
-        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
-    
-    return locations
         
 def getResults(lat, long, searchRadius):
     # helper function to return the list of places; there can be overlap. 
@@ -99,7 +84,7 @@ def getResults(lat, long, searchRadius):
     y=0
     
     if('next_page_token' in places1):
-        print "Yes, there is a next page token for places 1"
+        #print ("Yes, there is a next page token for places 1")
         while(x < 50):
             try:
                 next_page = "" + places1['next_page_token'].encode('ascii','ignore')
@@ -111,7 +96,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
 
                 if('next_page_token' in places2):
-                    print "Yes, there is a next page token for places 2"
+                    #print ("Yes, there is a next page token for places 2")
                     while(y < 50):
                         try:
                             next_page = "" + places2['next_page_token'].encode('ascii','ignore')
@@ -123,44 +108,71 @@ def getResults(lat, long, searchRadius):
                             return places
                         except (KeyError, googlemaps.exceptions.ApiError) as e:
                             #no next page token
-                            print ("Error with fetching results: ", e)
+                            #print ("Error with fetching results: ", e)
                             y += 1
                             continue
                 else:
-                    print "There is no next page token for places 2, end results"
+                    #print ("There is no next page token for places 2, end results")
                     return places
 
             except (KeyError, googlemaps.exceptions.ApiError) as e:
                 # no next page token
-                print ("Error with fetching results: ", e)
+                #print ("Error with fetching results: ", e)
                 x += 1
                 continue
     else:
-        print "There is no next page token for places 1, end results."
+        #print ("There is no next page token for places 1, end results.")
         return places
 
     return places
 
+def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
+    # returns array of places
+    if radius < gridSquareLength:
+        return []
+
+    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
+    
+    searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
+    locations = []
+    
+    for gridCenter in searchGrid:
+        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
+    
+    return locations
+
 def filterResults(results):
     # return results of type x,y,z 
     return 0
+
 
 def addToDB(array):
     #input: locations array - add to db all at once    
     # db columns: index, place, coordinate(lat, longitude), type
 
     # ================= Connect to DB ================= #
-    db = MySQLdb.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+
+    #  ========== For Albert  ========== #
+
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                     user="escality_user",
                     passwd="12345678")
+
+    #  ========= For Melissa  ========= #
+    # db = pymysql.connect(host= "localhost",
+    #             user="root",
+    #             passwd="password")
+    #  ================= End Connect to DB  ================= #
+
     cursor = db.cursor()
-    # cursor.execute("SET sql_notes = 0; ")       # Suppress warning
+    cursor.execute("SET sql_notes = 0; ")       # Suppress warning
 
     # ================= Default database and table set up ================= #
-    cursor.execute('CREATE DATABASE IF NOT EXISTS pois');
-    cursor.execute('USE pois')
-    cursor.execute("DROP TABLE IF EXISTS test")
-    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
+    cursor.execute('CREATE DATABASE IF NOT EXISTS escality_location_db');
+    cursor.execute('USE escality_location_db')
+    cursor.execute("DROP TABLE IF EXISTS pois")
+    cursor.execute("CREATE TABLE pois (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
     # ================= Parse array ================= #
     for entry in array:
@@ -177,7 +189,7 @@ def addToDB(array):
             try:
                 params = (placeName, lat, lng, types)
                 cursor.execute("""
-                    INSERT INTO test 
+                    INSERT INTO pois
                     VALUES
                         (%s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
@@ -187,12 +199,34 @@ def addToDB(array):
                 db.commit()
             except:
                 db.rollback()
+                
+     # ================= Close connection to DB  ================= #
+    cursor.close() 
     db.close()
+ 
     return
 
-def main():
-    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
-    #print searchArea(34, -118 , 1000)
-    searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
+def isNumber(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
+def main():
+    if len(sys.argv) < 4 or sys.argv[1] == 'help' or not isNumber(sys.argv[1]) or not isNumber(sys.argv[2]) or not isNumber(sys.argv[3]):
+        print ('Usage: python build_poi_database.py <center latitude> <center longitude> <search radius in meters>')
+        return
+        
+    centerLat = float(sys.argv[1])
+    centerLong = float(sys.argv[2])
+    searchRadius = float(sys.argv[3])
+    
+    if searchRadius >= 250:
+        addToDB(searchArea(centerLat, centerLong, searchRadius))
+    else:
+        print ("Usage: search radius must be >= 250 meters")
+
+    # ================= Testing for Melissa  ================= #
+    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()
