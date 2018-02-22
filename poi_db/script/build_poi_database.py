@@ -1,16 +1,7 @@
 import googlemaps
-<<<<<<< HEAD
 # import MySQLdb
 import pymysql.cursors
-=======
-#import MySQLdb
->>>>>>> f94566f2a164c092c64d248552dbb735c328e6af
 import math
-
-def getLocations(coordinates, rad):
-    # input: coordinates (latitude,longitude), radius
-    # output: dict of locations
-    return  gmaps.places_nearby(location=coordinates, radius=rad)
 
 '''
 Google Maps Client interface object. In production, the API key should not be
@@ -72,26 +63,6 @@ def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
         nextGridCenter = (nextLat, startLong)
     
     return gridCenters
-<<<<<<< HEAD
-
-def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSquareLength=DEFAULT_GRID_SQUARE_LENGTH_METERS):
-    # returns array of places
-
-    gridSquareSearchRadius = math.sqrt(2.0 * math.pow(gridSquareLength, 2)) / 2.0
-    
-    searchGrid = createSearchGrid(latitude, longitude, radius, gridSquareLength)
-    locations = []
-    
-    for gridCenter in searchGrid:
-        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
-        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
-    
-    for place in locations:
-        print (place)
-
-    return locations
-=======
->>>>>>> f94566f2a164c092c64d248552dbb735c328e6af
         
 def getResults(lat, long, searchRadius):
     # helper function to return the list of places; there can be overlap. 
