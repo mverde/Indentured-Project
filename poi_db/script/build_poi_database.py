@@ -79,7 +79,7 @@ def getResults(lat, long, searchRadius):
     y=0
     
     if('next_page_token' in places1):
-        print ("Yes, there is a next page token for places 1")
+        #print ("Yes, there is a next page token for places 1")
         while(x < 50):
             try:
                 next_page = "" + places1['next_page_token'].encode('ascii','ignore')
@@ -91,7 +91,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
 
                 if('next_page_token' in places2):
-                    print ("Yes, there is a next page token for places 2")
+                    #print ("Yes, there is a next page token for places 2")
                     while(y < 50):
                         try:
                             next_page = "" + places2['next_page_token'].encode('ascii','ignore')
@@ -103,20 +103,20 @@ def getResults(lat, long, searchRadius):
                             return places
                         except (KeyError, googlemaps.exceptions.ApiError) as e:
                             #no next page token
-                            print ("Error with fetching results: ", e)
+                            #print ("Error with fetching results: ", e)
                             y += 1
                             continue
                 else:
-                    print ("There is no next page token for places 2, end results")
+                    #print ("There is no next page token for places 2, end results")
                     return places
 
             except (KeyError, googlemaps.exceptions.ApiError) as e:
                 # no next page token
-                print ("Error with fetching results: ", e)
+                #print ("Error with fetching results: ", e)
                 x += 1
                 continue
     else:
-        print ("There is no next page token for places 1, end results.")
+        #print ("There is no next page token for places 1, end results.")
         return places
 
     return places
