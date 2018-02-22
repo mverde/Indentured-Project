@@ -61,9 +61,10 @@ public:
 	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters);
 	
 	// SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
+	// MaxRange will specify how far away from the line a place can be
 	// Additionally, only places that satisfy the filters will be accepted in the output
 	// This function will return a vector of Places that meet the requirements, which are specified in CNF format
-	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters);
+	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters);
 };
 
 
@@ -71,6 +72,7 @@ public:
 ServerCall::ServerCall(int options)
 {
 	// To be implemented once the AWS is running
+	srand(time(NULL));
 }
 
 vector<string> dummyServerResults()
@@ -206,11 +208,12 @@ vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
 		selectedPlaceIndices[i] = -1;
 
 	vector<Place> selectedPlaces;
-	srand(time(0));
+
 	for(int i = 0; i < numPlaces; i++)
 	{
 		// Will select one of the indices of our place vector
 		int currIndex = rand() % vectorSize;
+		//cout << vectorSize << " " << currIndex << endl;
 
 		// Check if this index was already chosen to be in our array
 		bool indexExists = false;
@@ -248,6 +251,10 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	// This is where we will store places that meet the required criteria
 	vector<Place> outputPlaces;
 
+	// If 0 or a negative number of places is requested, return an empty vector
+	if(numPlaces < 1)
+		return outputPlaces;
+
 	vector<Place> dbPlaceVec = queryDatabase(latitude, longitude, maxRange);
 
 	// Now we need to filter the results in dbPlaceVec based on the input filters
@@ -268,14 +275,42 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 // SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
-vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters)
+vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters)
 {
 	vector<Place> outputPlaces;
 
-	// To be implemented
+
+	if(numPlaces < 1)
+		return outputPlaces;
+	// If only one place is requested, just return a place near the init coordinate
+	else if(numPlaces == 1)
+		return SearchByCoordinate(initLatitude, initLongitude, maxRange, numPlaces, filters);
+
+	// Otherwise, we need to split the line to have numPlaces locations
+	// Pretend latitude is a y value and longitude is an x value in a 2D coordinate plane
+	double longitudeChange = endLongitude - initLongitude;
+	double slope = (endLatitude - initLatitude) / longitudeChange;
+
+	double currLat = initLatitude;
+	double currLong = initLongitude;
+	// Partition the longitude into (numPlaces - 1) since the initial coordinate will be used as the first location
+	double longitudeStep = longitudeChange / (numPlaces - 1);
+	double latitudeStep = longitudeStep * slope;
+
+	for(int i = 0; i < numPlaces; i++)
+	{
+		// Find a location at the current coordinate
+		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1, filters);
+		outputPlaces.push_back(currPlace[0]);
+
+		// Move to the next coordinate in the line
+		currLong += longitudeStep;
+		currLat += latitudeStep;
+	}
 
 	return outputPlaces;
 }
+
 
 int main()
 {
@@ -309,4 +344,25 @@ int main()
 		string str = placeToString(poi[i]);
 		cout << str << endl;
 	}
+
+	// Should return random locations from the database
+	cout << endl << "Test 4:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,2,"");
+	for(int i = 0; i < 10; i++)
+	{
+		vector<Place> curr = randomSelectPlaces(poi, 1);
+		cout << placeToString(curr[0]) << endl;
+	}
+
+	// Should return 2 places
+	cout << endl << "Test 5:" << endl;
+	poi = test.SearchByLine(1.0,1.0,1.0,1.0,1.0,2,"");
+
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+
 }
