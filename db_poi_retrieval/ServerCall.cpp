@@ -1,10 +1,13 @@
 // ServerCall.cpp
 // Overview: ServerCall.cpp will be used to connect to the AWS server and retrieve desired points of interests stored in the database
 
+// To compile: g++ ServerCall.cpp -static-libstdc++ -o executableName.exe
+
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iterator>
+#include <iostream>
 
 using namespace std;
 
@@ -16,6 +19,11 @@ struct Place
 	double longitude;
 	string type;
 };
+
+string placeToString(Place p)
+{
+	return p.name + ", " + to_string(p.latitude) + ", " + to_string(p.longitude) + ", " + p.type;
+}
 
 // Split by delimiter function obtained from: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
 
@@ -37,8 +45,9 @@ vector<string> split(const string &s, char delim) {
 // This class handles server connections and the querying of the server database
 class ServerCall
 {
+public:
 	// Constructor; Parameters not specified yet
-	ServerCall(int options = 0);
+	ServerCall(int options);
 
 	// This function will find all locations within a square of side length 2*maxRange centered around the specified coordinate
 	vector<Place> queryDatabase(double latitude, double longitude, double maxRange);
@@ -55,22 +64,31 @@ class ServerCall
 	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters);
 };
 
+
 // The constructor will set up a connection with the AWS server to allow for database querying
 ServerCall::ServerCall(int options)
 {
 	// To be implemented once the AWS is running
 }
 
+vector<string> dummyServerResults()
+{
+	vector<string> serverResult;
+	serverResult.push_back("Los Angeles,34.05223420,-118.24368490,locality,political");
+	serverResult.push_back("Los Angeles City Hall,34.05352670,-118.24293160,city_hall,premise,local_government_office,point_of_interest,establishment");
+
+	return serverResult;
+}
+
 // This function will get the locations in a square around the specified coordinate
 vector<Place> ServerCall::queryDatabase(double latitude, double longitude, double maxRange)
 {
 	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
-	vector<string> serverResult;
 
 	// We will assume that serverResult has meaningful items for now, since the server is not set up yet
 	// For now, we insert dummy test data to serverResult
-	serverResult.push_back("Los Angeles,34.05223420,-118.24368490,locality,political");
-	serverResult.push_back("Los Angeles City Hall,34.05352670,-118.24293160,city_hall,premise,local_government_office,point_of_interest,establishment");
+	vector<string> serverResult = dummyServerResults();
+
 
 	// dbPlaceVec will hold Places that were returned by the database query (filtering will happen later)
 	vector<Place> dbPlaceVec;
@@ -113,9 +131,68 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 	return dbPlaceVec;
 }
 
+// This function will filter a vector of Places based on the filters string
+// The format for the filter string is as follows:
+// "type1,type2,type3|type4|type5,type6"
+// This filter string makes it so that the Places returned by this function will have
+// (type1, type2, and type 3) OR type 4 OR (type 5 and type 6) in the Place's type string
+vector<Place> filterPlaces(vector<Place> places, string filters)
+{
+	vector<Place> outputVector;
+
+	// Split the filter into the OR filter types, where each row in the vector is a string of AND filter types
+	vector<string> filterGroupVector = split(filters, '|');
+	vector<vector<string>> filterVector;
+
+	// Now we make a vector, where each row in that vector is a string vector where each string is an individual filter type
+	vector<string>::iterator filterGroupIterator, filterGroupEnd = filterGroupVector.end();
+	for(filterGroupIterator = filterGroupVector.begin(); filterGroupIterator != filterGroupEnd; filterGroupIterator++)
+	{
+		filterVector.push_back(split(*filterGroupIterator, ','));
+	}
+
+	bool passesFilters;	
+	// Now we use the vector of vectors to filter the input places
+	vector<Place>::iterator placesIterator, placesEnd = places.end();
+	for(placesIterator = places.begin(); placesIterator != placesEnd; placesIterator++)
+	{
+		passesFilters = true;
+		string currPlaceTypes = (*placesIterator).type;
+
+		// Go through each OR statement until one is satisfied
+		vector<vector<string>>::iterator orStatementIterator, orStatementEnd = filterVector.end();
+		for(orStatementIterator = filterVector.begin(); orStatementIterator != orStatementEnd; orStatementIterator++)
+		{
+			// Go through each AND statement
+			vector<string> currAndStatement = (*orStatementIterator);
+			vector<string>::iterator andStatementIterator, andStatementEnd = currAndStatement.end();
+			for(andStatementIterator = currAndStatement.begin(); andStatementIterator != andStatementEnd; andStatementIterator++)
+			{
+				// If it fails one of these filters, then break out of this loop and go to the next set of AND statements
+				if(currPlaceTypes.find(*andStatementIterator) == string::npos)
+				{
+					passesFilters = false;
+					break;
+				}
+			}
+
+			// If it passed all of the filters in a set of AND statements, then add this place to our output vector and stop going through OR statements
+			if(passesFilters)
+			{
+				outputVector.push_back(*placesIterator);
+				break;
+			}
+			// Otherwise, check if the current Place satisfies the next OR statement
+		}
+	}
+
+	return outputVector;
+}
+
 // SearchByCoordinate will find at most numPlaces that are in maxRange radius from the specified coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
+// If filters is empty (filters == ""), then filtering is not required
 vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters)
 {
 	// This is where we will store places that meet the required criteria
@@ -125,7 +202,12 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 
 	// Now we need to filter the results in dbPlaceVec based on the input filters
 
-
+	// If a filter is specified, filter our Places
+	if(filters != "")
+		outputPlaces = filterPlaces(dbPlaceVec, filters);
+	else
+	//Otherwise, retain all Places
+		outputPlaces = dbPlaceVec;
 	return outputPlaces;
 }
 
@@ -143,5 +225,12 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 
 int main()
 {
+	ServerCall test = ServerCall(1);
+	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"political");
 
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
 }
