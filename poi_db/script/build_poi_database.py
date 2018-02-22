@@ -146,12 +146,18 @@ def addToDB(array):
     # db columns: index, place, coordinate(lat, longitude), type
 
     # ================= Connect to DB ================= #
-    # db = MySQLdb.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+
+    #  ========== For Albert  ========== #
+
+    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
     #                 user="escality_user",
     #                 passwd="12345678")
+
+    #  ========= For Melissa  ========= #
     db = pymysql.connect(host= "localhost",
                 user="root",
                 passwd="password")
+    #  ================= End Connect to DB  ================= #
 
     cursor = db.cursor()
     # cursor.execute("SET sql_notes = 0; ")       # Suppress warning
