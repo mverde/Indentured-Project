@@ -1,5 +1,6 @@
 import googlemaps
-import MySQLdb
+# import MySQLdb
+import pymysql.cursors
 import math
 
 ###places_dict = gmaps.places('', (34.0537136,-118.24265330000003), 10000)
@@ -23,8 +24,8 @@ def milesToMeters(miles):
 '''
 Global variables.
 '''
-DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(1)
-DEFAULT_SEARCH_RADIUS_MILES = 0.25
+DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(0.13)
+DEFAULT_SEARCH_RADIUS_MILES = 0.13
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
 # TYPES_OF_PLACES = ['restaurant', 'retail', 'entertainment', 'establishment', 'food', 'point of interest', 'cafe']
@@ -84,6 +85,9 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
         print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
         locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
     
+    for place in locations:
+        print (place)
+
     return locations
         
 def getResults(lat, long, searchRadius):
@@ -99,7 +103,7 @@ def getResults(lat, long, searchRadius):
     y=0
     
     if('next_page_token' in places1):
-        print "Yes, there is a next page token for places 1"
+        print ("Yes, there is a next page token for places 1")
         while(x < 50):
             try:
                 next_page = "" + places1['next_page_token'].encode('ascii','ignore')
@@ -111,7 +115,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
 
                 if('next_page_token' in places2):
-                    print "Yes, there is a next page token for places 2"
+                    print ("Yes, there is a next page token for places 2")
                     while(y < 50):
                         try:
                             next_page = "" + places2['next_page_token'].encode('ascii','ignore')
@@ -127,7 +131,7 @@ def getResults(lat, long, searchRadius):
                             y += 1
                             continue
                 else:
-                    print "There is no next page token for places 2, end results"
+                    print ("There is no next page token for places 2, end results")
                     return places
 
             except (KeyError, googlemaps.exceptions.ApiError) as e:
@@ -136,7 +140,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
                 continue
     else:
-        print "There is no next page token for places 1, end results."
+        print ("There is no next page token for places 1, end results.")
         return places
 
     return places
@@ -150,7 +154,7 @@ def addToDB(array):
     # db columns: index, place, coordinate(lat, longitude), type
 
     # ================= Connect to DB ================= #
-    db = MySQLdb.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                     user="escality_user",
                     passwd="12345678")
     cursor = db.cursor()
@@ -191,8 +195,8 @@ def addToDB(array):
     return
 
 def main():
-    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
+    addToDB(searchArea(34.0537136, -118.24265330000003))
     #print searchArea(34, -118 , 1000)
-    searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
+    # searchArea(34.0537136, -118.24265330000003)
 
 main()
