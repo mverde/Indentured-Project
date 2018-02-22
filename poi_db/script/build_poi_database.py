@@ -10,6 +10,12 @@ stored locally.
 '''
 gmaps = googlemaps.Client(key='AIzaSyBmvB1gGLH0cujfkhQylJu6St3BIqLcvwU')
 
+def getLocations(coordinates, rad):
+    # input: coordinates (latitude,longitude), radius
+    # output: dict of locations
+    return  gmaps.places_nearby(location=coordinates, radius=rad)
+
+
 def milesToMeters(miles):
     return miles*1609.34
 
@@ -141,6 +147,7 @@ def filterResults(results):
     # return results of type x,y,z 
     return 0
 
+
 def addToDB(array):
     #input: locations array - add to db all at once    
     # db columns: index, place, coordinate(lat, longitude), type
@@ -149,18 +156,18 @@ def addToDB(array):
 
     #  ========== For Albert  ========== #
 
-    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-                    user="escality_user",
-                    passwd="12345678")
+    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+    #                 user="escality_user",
+    #                 passwd="12345678")
 
     #  ========= For Melissa  ========= #
-    # db = pymysql.connect(host= "localhost",
-    #             user="root",
-    #             passwd="password")
+    db = pymysql.connect(host= "localhost",
+                user="root",
+                passwd="password")
     #  ================= End Connect to DB  ================= #
 
     cursor = db.cursor()
-    # cursor.execute("SET sql_notes = 0; ")       # Suppress warning
+    cursor.execute("SET sql_notes = 0; ")       # Suppress warning
 
     # ================= Default database and table set up ================= #
     cursor.execute('CREATE DATABASE IF NOT EXISTS escality_location_db');
@@ -183,7 +190,7 @@ def addToDB(array):
             try:
                 params = (placeName, lat, lng, types)
                 cursor.execute("""
-                    INSERT INTO test 
+                    INSERT INTO pois
                     VALUES
                         (%s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
@@ -193,7 +200,17 @@ def addToDB(array):
                 db.commit()
             except:
                 db.rollback()
-    
+    cursor.execute('SELECT * from pois')
+    output = []
+    for row in cursor:
+        row_data = []
+        for data in row:
+            if type(data) is str:
+                row_data.append(str(data))
+            else:
+                row_data.append(float(data))
+        output.append(row_data)
+    print (output)
     return
 
 def isNumber(s):
@@ -204,16 +221,18 @@ def isNumber(s):
         return False
 
 def main():
-    if len(sys.argv) < 4 or sys.argv[1] == 'help' or not isNumber(sys.argv[1]) or not isNumber(sys.argv[2]) or not isNumber(sys.argv[3]):
-        print ('Usage: python build_poi_database.py <center latitude> <center longitude> <search radius in meters>')
-        return
+    # if len(sys.argv) < 4 or sys.argv[1] == 'help' or not isNumber(sys.argv[1]) or not isNumber(sys.argv[2]) or not isNumber(sys.argv[3]):
+    #     print ('Usage: python build_poi_database.py <center latitude> <center longitude> <search radius in meters>')
+    #     return
         
-    centerLat = float(sys.argv[1])
-    centerLong = float(sys.argv[2])
-    searchRadius = float(sys.argv[3])
+    # centerLat = float(sys.argv[1])
+    # centerLong = float(sys.argv[2])
+    # searchRadius = float(sys.argv[3])
     
-    if searchRadius >= 250:
-        addToDB(searchArea(centerLat, centerLong, searchRadius))
-    else:
-        print ("Usage: search radius must be >= 250 meters")
+    # if searchRadius >= 250:
+    #     addToDB(searchArea(centerLat, centerLong, searchRadius))
+    # else:
+    #     print ("Usage: search radius must be >= 250 meters")
+
+     addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()
