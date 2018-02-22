@@ -50,7 +50,7 @@ def test_addToDB():
    #  =============================== ================= #                 
     cursor = db.cursor()
     cursor.execute('USE escality_location_db')
-    cursor.execute('SELECT * from test')
+    cursor.execute('SELECT * from pois')
     
     output = []
     for row in cursor:
