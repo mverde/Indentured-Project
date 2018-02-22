@@ -1,3 +1,4 @@
+import sys
 import googlemaps
 # import MySQLdb
 import pymysql.cursors
@@ -15,11 +16,12 @@ def milesToMeters(miles):
 '''
 Global variables.
 '''
+# Approximate radius that returns ~60 results per query in Downtown LA
 DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(0.13)
-DEFAULT_SEARCH_RADIUS_MILES = 0.13
+# Approximate radius of LA City
+DEFAULT_SEARCH_RADIUS_MILES = 12.427424
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
-
 
 '''
 Functions to get new latitude and longitude coordinates by adding meters to 
@@ -188,9 +190,22 @@ def addToDB(array):
     
     return
 
+def isNumber(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 def main():
-    addToDB(searchArea(34.0537136, -118.24265330000003))
-    #print searchArea(34, -118 , 1000)
-    # searchArea(34.0537136, -118.24265330000003)
+    if len(sys.argv) < 4 or sys.argv[1] == 'help' or not isNumber(sys.argv[1]) or not isNumber(sys.argv[2]) or not isNumber(sys.argv[3]):
+        print ('Usage: python build_poi_database.py <center latitude> <center longitude> <search radius in meters>')
+        return
+        
+    centerLat = float(sys.argv[1])
+    centerLong = float(sys.argv[2])
+    searchRadius = float(sys.argv[3])
+    
+    addToDB(searchArea(centerLat, centerLong, searchRadius))
 
 main()
