@@ -10,12 +10,6 @@ stored locally.
 '''
 gmaps = googlemaps.Client(key='AIzaSyBmvB1gGLH0cujfkhQylJu6St3BIqLcvwU')
 
-def getLocations(coordinates, rad):
-    # input: coordinates (latitude,longitude), radius
-    # output: dict of locations
-    return  gmaps.places_nearby(location=coordinates, radius=rad)
-
-
 def milesToMeters(miles):
     return miles*1609.34
 
@@ -221,18 +215,17 @@ def isNumber(s):
         return False
 
 def main():
-    # if len(sys.argv) < 4 or sys.argv[1] == 'help' or not isNumber(sys.argv[1]) or not isNumber(sys.argv[2]) or not isNumber(sys.argv[3]):
-    #     print ('Usage: python build_poi_database.py <center latitude> <center longitude> <search radius in meters>')
-    #     return
+    if len(sys.argv) < 4 or sys.argv[1] == 'help' or not isNumber(sys.argv[1]) or not isNumber(sys.argv[2]) or not isNumber(sys.argv[3]):
+        print ('Usage: python build_poi_database.py <center latitude> <center longitude> <search radius in meters>')
+        return
         
-    # centerLat = float(sys.argv[1])
-    # centerLong = float(sys.argv[2])
-    # searchRadius = float(sys.argv[3])
+    centerLat = float(sys.argv[1])
+    centerLong = float(sys.argv[2])
+    searchRadius = float(sys.argv[3])
     
-    # if searchRadius >= 250:
-    #     addToDB(searchArea(centerLat, centerLong, searchRadius))
-    # else:
-    #     print ("Usage: search radius must be >= 250 meters")
+    if searchRadius >= 250:
+        addToDB(searchArea(centerLat, centerLong, searchRadius))
+    else:
+        print ("Usage: search radius must be >= 250 meters")
 
-     addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()
