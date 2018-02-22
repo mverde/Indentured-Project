@@ -99,7 +99,7 @@ def getResults(lat, long, searchRadius):
     y=0
     
     if('next_page_token' in places1):
-        print "Yes, there is a next page token for places 1"
+        print ("Yes, there is a next page token for places 1")
         while(x < 50):
             try:
                 next_page = "" + places1['next_page_token'].encode('ascii','ignore')
@@ -111,7 +111,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
 
                 if('next_page_token' in places2):
-                    print "Yes, there is a next page token for places 2"
+                    print ("Yes, there is a next page token for places 2")
                     while(y < 50):
                         try:
                             next_page = "" + places2['next_page_token'].encode('ascii','ignore')
@@ -127,7 +127,7 @@ def getResults(lat, long, searchRadius):
                             y += 1
                             continue
                 else:
-                    print "There is no next page token for places 2, end results"
+                    print ("There is no next page token for places 2, end results")
                     return places
 
             except (KeyError, googlemaps.exceptions.ApiError) as e:
@@ -136,7 +136,7 @@ def getResults(lat, long, searchRadius):
                 x += 1
                 continue
     else:
-        print "There is no next page token for places 1, end results."
+        print ("There is no next page token for places 1, end results.")
         return places
 
     return places
@@ -150,15 +150,18 @@ def addToDB(array):
     # db columns: index, place, coordinate(lat, longitude), type
 
     # ================= Connect to DB ================= #
-    db = MySQLdb.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-                    user="escality_user",
-                    passwd="12345678")
+    # db = MySQLdb.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+    #                 user="escality_user",
+    #                 passwd="12345678")
+    db = MySQLdb.connect(host= "localhost",
+                user="root",
+                passwd="password")
     cursor = db.cursor()
     # cursor.execute("SET sql_notes = 0; ")       # Suppress warning
 
     # ================= Default database and table set up ================= #
-    cursor.execute('CREATE DATABASE IF NOT EXISTS pois');
-    cursor.execute('USE pois')
+    cursor.execute('CREATE DATABASE IF NOT EXISTS escality_location_db');
+    cursor.execute('USE escality_location_db')
     cursor.execute("DROP TABLE IF EXISTS test")
     cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
@@ -187,12 +190,12 @@ def addToDB(array):
                 db.commit()
             except:
                 db.rollback()
-    db.close()
+    
     return
 
 def main():
-    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
+    addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
     #print searchArea(34, -118 , 1000)
-    searchArea(34.0537136, -118.24265330000003, milesToMeters(1))
+    #  addToDB(searchArea(34.0537136, -118.24265330000003, milesToMeters(1)))
 
 main()
