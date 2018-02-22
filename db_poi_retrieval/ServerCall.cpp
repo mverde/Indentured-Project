@@ -349,10 +349,10 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 int main()
 {
 	ServerCall test = ServerCall(1);
-	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
 
 	// Should return all places returned by the database
-	cout << "Test Return All:" << endl;
+	cout << "Test Return All Locations:" << endl;
+	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
 	for(int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);
@@ -360,7 +360,7 @@ int main()
 	}
 
 	// Should only return places that contain specific types
-	cout << endl << "Filter Test 1:" << endl;
+	cout << endl << "Filter Test 1: type8" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,4,"type8");
 
 	for(int i = 0; i < poi.size(); i++)
@@ -369,7 +369,7 @@ int main()
 		cout << str << endl;
 	}
 
-	cout << endl << "Filter Test 2:" << endl;
+	cout << endl << "Filter Test 2: type3,type4" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,4,"type3,type4");
 
 	for(int i = 0; i < poi.size(); i++)
@@ -378,7 +378,7 @@ int main()
 		cout << str << endl;
 	}
 
-	cout << endl << "Filter Test 3:" << endl;
+	cout << endl << "Filter Test 3: type3,type4|type8" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,6,"type3,type4|type8");
 
 	for(int i = 0; i < poi.size(); i++)
@@ -387,7 +387,7 @@ int main()
 		cout << str << endl;
 	}
 
-	cout << endl << "Filter Test 4:" << endl;
+	cout << endl << "Filter Test 4: type8|type4,type3" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,6,"type8|type4,type3");
 
 	for(int i = 0; i < poi.size(); i++)
@@ -397,7 +397,16 @@ int main()
 	}
 
 	// Should only return one place
-	cout << endl << "Number of Places Test:" << endl;
+	cout << endl << "Number of Places Test 1: Return 1 Place" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"");
+
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	cout << endl << "Number of Places Test 2: Return 3 Places" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"");
 
 	for(int i = 0; i < poi.size(); i++)
@@ -407,9 +416,9 @@ int main()
 	}
 
 	// Should return random locations from the database
-	cout << endl << "Random Location Test:" << endl;
+	cout << endl << "Random Location Selection Test:" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
-	for(int i = 0; i < 10; i++)
+	for(int i = 0; i < 5; i++)
 	{
 		vector<Place> curr = randomSelectPlaces(poi, 1);
 		cout << placeToString(curr[0]) << endl;
