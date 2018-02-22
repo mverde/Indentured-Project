@@ -27,6 +27,26 @@ string placeToString(Place p)
 	return p.name + ", " + to_string(p.latitude) + ", " + to_string(p.longitude) + ", " + p.type;
 }
 
+void printStringVector(vector<string> v)
+{
+	vector<string>::iterator i, end = v.end();
+	for(i = v.begin(); i != end; i++)
+	{
+		cout << *i << " ";
+	}
+	cout << endl;
+}
+
+void printPlaceVector(vector<Place> v)
+{
+	vector<Place>::iterator i, end = v.end();
+	for(i = v.begin(); i != end; i++)
+	{
+		cout << placeToString(*i) << " ";
+	}
+	cout << endl;
+}
+
 // Split by delimiter function obtained from: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
 
 template<typename Out>
@@ -61,9 +81,10 @@ public:
 	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters);
 	
 	// SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
+	// MaxRange will specify how far away from the line a place can be
 	// Additionally, only places that satisfy the filters will be accepted in the output
 	// This function will return a vector of Places that meet the requirements, which are specified in CNF format
-	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters);
+	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters);
 };
 
 
@@ -71,13 +92,19 @@ public:
 ServerCall::ServerCall(int options)
 {
 	// To be implemented once the AWS is running
+	srand(time(NULL));
 }
 
 vector<string> dummyServerResults()
 {
 	vector<string> serverResult;
-	serverResult.push_back("Los Angeles,34.05223420,-118.24368490,locality,political");
-	serverResult.push_back("Los Angeles City Hall,34.05352670,-118.24293160,city_hall,premise,local_government_office,point_of_interest,establishment");
+	serverResult.push_back("Place1,10.0,100.0,type1,type2,type8");
+	serverResult.push_back("Place2,12.0,102.0,type1,type3,type4,type5,type6");
+	serverResult.push_back("Place3,14.0,124.0,type1,type7,type9");
+	serverResult.push_back("Place4,16.0,126.0,type6,type3,type10,type8,type2");
+	serverResult.push_back("Place5,18.0,128.0,type9,type4,type3");
+	serverResult.push_back("Place6,20.0,130.0,type1,type6,type8");
+	serverResult.push_back("Place7,22.0,132.0,type12,type3,type4,type8,type10");
 
 	return serverResult;
 }
@@ -141,7 +168,7 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 vector<Place> filterPlaces(vector<Place> places, string filters)
 {
 	vector<Place> outputVector;
-
+	//cout << "FILTER BEGINNING:" << endl;
 	// Split the filter into the OR filter types, where each row in the vector is a string of AND filter types
 	vector<string> filterGroupVector = split(filters, '|');
 	vector<vector<string>> filterVector;
@@ -155,24 +182,29 @@ vector<Place> filterPlaces(vector<Place> places, string filters)
 
 	bool passesFilters;	
 	// Now we use the vector of vectors to filter the input places
+
+	// For each place in places
 	vector<Place>::iterator placesIterator, placesEnd = places.end();
 	for(placesIterator = places.begin(); placesIterator != placesEnd; placesIterator++)
 	{
-		passesFilters = true;
 		string currPlaceTypes = (*placesIterator).type;
+		//cout << endl << placeToString(*placesIterator) << endl;
 
 		// Go through each OR statement until one is satisfied
 		vector<vector<string>>::iterator orStatementIterator, orStatementEnd = filterVector.end();
 		for(orStatementIterator = filterVector.begin(); orStatementIterator != orStatementEnd; orStatementIterator++)
 		{
+			passesFilters = true;
 			// Go through each AND statement
 			vector<string> currAndStatement = (*orStatementIterator);
+			
 			vector<string>::iterator andStatementIterator, andStatementEnd = currAndStatement.end();
 			for(andStatementIterator = currAndStatement.begin(); andStatementIterator != andStatementEnd; andStatementIterator++)
 			{
 				// If it fails one of these filters, then break out of this loop and go to the next set of AND statements
 				if(currPlaceTypes.find(*andStatementIterator) == string::npos)
 				{
+					//cout << "FAILED CURRENT FILTER" << endl;
 					passesFilters = false;
 					break;
 				}
@@ -181,9 +213,11 @@ vector<Place> filterPlaces(vector<Place> places, string filters)
 			// If it passed all of the filters in a set of AND statements, then add this place to our output vector and stop going through OR statements
 			if(passesFilters)
 			{
+				//cout << "PASSED FILTER" << endl;
 				outputVector.push_back(*placesIterator);
 				break;
 			}
+
 			// Otherwise, check if the current Place satisfies the next OR statement
 		}
 	}
@@ -206,11 +240,12 @@ vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
 		selectedPlaceIndices[i] = -1;
 
 	vector<Place> selectedPlaces;
-	srand(time(0));
+
 	for(int i = 0; i < numPlaces; i++)
 	{
 		// Will select one of the indices of our place vector
 		int currIndex = rand() % vectorSize;
+		//cout << vectorSize << " " << currIndex << endl;
 
 		// Check if this index was already chosen to be in our array
 		bool indexExists = false;
@@ -248,9 +283,15 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	// This is where we will store places that meet the required criteria
 	vector<Place> outputPlaces;
 
+	// If 0 or a negative number of places is requested, return an empty vector
+	if(numPlaces < 1)
+		return outputPlaces;
+
 	vector<Place> dbPlaceVec = queryDatabase(latitude, longitude, maxRange);
 
 	// Now we need to filter the results in dbPlaceVec based on the input filters
+
+
 
 	// If a filter is specified, filter our Places
 	if(filters != "")
@@ -268,31 +309,86 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 // SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
-vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, int numPlaces, string filters)
+vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters)
 {
 	vector<Place> outputPlaces;
 
-	// To be implemented
+
+	if(numPlaces < 1)
+		return outputPlaces;
+	// If only one place is requested, just return a place near the init coordinate
+	else if(numPlaces == 1)
+		return SearchByCoordinate(initLatitude, initLongitude, maxRange, numPlaces, filters);
+
+	// Otherwise, we need to split the line to have numPlaces locations
+	// Pretend latitude is a y value and longitude is an x value in a 2D coordinate plane
+	double longitudeChange = endLongitude - initLongitude;
+	double slope = (endLatitude - initLatitude) / longitudeChange;
+
+	double currLat = initLatitude;
+	double currLong = initLongitude;
+	// Partition the longitude into (numPlaces - 1) since the initial coordinate will be used as the first location
+	double longitudeStep = longitudeChange / (numPlaces - 1);
+	double latitudeStep = longitudeStep * slope;
+
+	for(int i = 0; i < numPlaces; i++)
+	{
+		// Find a location at the current coordinate
+		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1, filters);
+		outputPlaces.push_back(currPlace[0]);
+
+		// Move to the next coordinate in the line
+		currLong += longitudeStep;
+		currLat += latitudeStep;
+	}
 
 	return outputPlaces;
 }
 
+
 int main()
 {
 	ServerCall test = ServerCall(1);
-	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,2,"");
+	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
 
 	// Should return all places returned by the database
-	cout << "Test 1:" << endl;
+	cout << "Test Return All:" << endl;
 	for(int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);
 		cout << str << endl;
 	}
 
-	// Should only return places that contain "political" as one of its types
-	cout << endl << "Test 2:" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"political");
+	// Should only return places that contain specific types
+	cout << endl << "Filter Test 1:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,4,"type8");
+
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	cout << endl << "Filter Test 2:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,4,"type3,type4");
+
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	cout << endl << "Filter Test 3:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,6,"type3,type4|type8");
+
+	for(int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	cout << endl << "Filter Test 4:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,6,"type8|type4,type3");
 
 	for(int i = 0; i < poi.size(); i++)
 	{
@@ -301,12 +397,21 @@ int main()
 	}
 
 	// Should only return one place
-	cout << endl << "Test 3:" << endl;
+	cout << endl << "Number of Places Test:" << endl;
 	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"");
 
 	for(int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);
 		cout << str << endl;
+	}
+
+	// Should return random locations from the database
+	cout << endl << "Random Location Test:" << endl;
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
+	for(int i = 0; i < 10; i++)
+	{
+		vector<Place> curr = randomSelectPlaces(poi, 1);
+		cout << placeToString(curr[0]) << endl;
 	}
 }
