@@ -1,7 +1,7 @@
 // ServerCall.cpp
 // Overview: ServerCall.cpp will be used to connect to the AWS server and retrieve desired points of interests stored in the database
 
-// To compile: g++ ServerCall.cpp -static-libstdc++ -o executableName.exe
+// To compile: g++ ServerCall.cpp -static-libstdc++ -o ServerCallTest.exe
 
 #include <string>
 #include <sstream>
@@ -407,7 +407,7 @@ int main()
 	}
 
 	cout << endl << "Number of Places Test 2: Return 3 Places" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"");
+	poi = test.SearchByCoordinate(1.0,1.0,1.0,3,"");
 
 	for(int i = 0; i < poi.size(); i++)
 	{
