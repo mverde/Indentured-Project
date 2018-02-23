@@ -84,10 +84,10 @@ def getResults(lat, long, searchRadius):
     y=0
     
     if('next_page_token' in places1):
-        #print ("Yes, there is a next page token for places 1")
+        # print ("Yes, there is a next page token for places 1")
         while(x < 50):
             try:
-                next_page = "" + places1['next_page_token'].encode('ascii','ignore')
+                next_page = places1['next_page_token'].encode('ascii','ignore')
                 places2 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
                 
                 for place in places2['results']:
@@ -96,10 +96,10 @@ def getResults(lat, long, searchRadius):
                 x += 1
 
                 if('next_page_token' in places2):
-                    #print ("Yes, there is a next page token for places 2")
+                    # print ("Yes, there is a next page token for places 2")
                     while(y < 50):
                         try:
-                            next_page = "" + places2['next_page_token'].encode('ascii','ignore')
+                            next_page = places2['next_page_token'].encode('ascii','ignore')
                             places3 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
                             
                             for place in places3['results']:
@@ -140,6 +140,9 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
         print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
         locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
     
+    # for item in locations:
+    #     print (item)
+
     return locations
 
 def filterResults(results):
@@ -221,6 +224,8 @@ def main():
     centerLat = float(sys.argv[1])
     centerLong = float(sys.argv[2])
     searchRadius = float(sys.argv[3])
+
+    # searchArea(centerLat, centerLong, searchRadius)
     
     if searchRadius >= 250:
         addToDB(searchArea(centerLat, centerLong, searchRadius))
