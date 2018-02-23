@@ -10,6 +10,11 @@ stored locally.
 '''
 gmaps = googlemaps.Client(key='AIzaSyBmvB1gGLH0cujfkhQylJu6St3BIqLcvwU')
 
+# def getLocations(coordinates, rad):
+#     # input: coordinates (latitude,longitude), radius
+#     # output: dict of locations
+#     return  gmaps.places_nearby(location=coordinates, radius=rad)
+
 def milesToMeters(miles):
     return miles*1609.34
 
@@ -141,22 +146,33 @@ def filterResults(results):
     # return results of type x,y,z 
     return 0
 
+
 def addToDB(array):
     #input: locations array - add to db all at once    
     # db columns: index, place, coordinate(lat, longitude), type
 
     # ================= Connect to DB ================= #
+
+    #  ========== For Albert  ========== #
+
     db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                     user="escality_user",
                     passwd="12345678")
+
+    #  ========= For Melissa  ========= #
+    # db = pymysql.connect(host= "localhost",
+    #             user="root",
+    #             passwd="password")
+    #  ================= End Connect to DB  ================= #
+
     cursor = db.cursor()
-    # cursor.execute("SET sql_notes = 0; ")       # Suppress warning
+    cursor.execute("SET sql_notes = 0; ")       # Suppress warning
 
     # ================= Default database and table set up ================= #
-    cursor.execute('CREATE DATABASE IF NOT EXISTS pois');
-    cursor.execute('USE pois')
-    cursor.execute("DROP TABLE IF EXISTS test")
-    cursor.execute("CREATE TABLE test (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
+    cursor.execute('CREATE DATABASE IF NOT EXISTS escality_location_db');
+    cursor.execute('USE escality_location_db')
+    cursor.execute("DROP TABLE IF EXISTS pois")
+    cursor.execute("CREATE TABLE pois (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
     # ================= Parse array ================= #
     for entry in array:
@@ -173,7 +189,7 @@ def addToDB(array):
             try:
                 params = (placeName, lat, lng, types)
                 cursor.execute("""
-                    INSERT INTO test 
+                    INSERT INTO pois
                     VALUES
                         (%s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
@@ -183,7 +199,11 @@ def addToDB(array):
                 db.commit()
             except:
                 db.rollback()
+                
+     # ================= Close connection to DB  ================= #
+    cursor.close() 
     db.close()
+ 
     return
 
 def isNumber(s):
@@ -202,6 +222,11 @@ def main():
     centerLong = float(sys.argv[2])
     searchRadius = float(sys.argv[3])
     
-    addToDB(searchArea(centerLat, centerLong, searchRadius))
+    if searchRadius >= 250:
+        addToDB(searchArea(centerLat, centerLong, searchRadius))
+    else:
+        print ("Usage: search radius must be >= 250 meters")
 
+    # ================= Testing for Melissa  ================= #
+    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()
