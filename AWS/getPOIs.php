@@ -15,15 +15,31 @@
   VerifyPOIsTable($connection, DB_DATABASE); 
 
   /* If input fields are populated, add a row to the Employees table. */
-  $pois_place = htmlentities($_POST['Place']);
-  $pois_lat = htmlentities($_POST['Lat']);
-  $pois_lng = htmlentities($_POST['Lng']);
-  $pois_types = htmlentities($_POST['Types']);
-
-  if (strlen($pois_place) || strlen($pois_lat) || strlen($pois_lng) || strlen($pois_types)) {
-    AddPoi($connection, $pois_place, $pois_lat, $pois_lng, $pois_types);
-  }
+  $pois_select = htmlentities($_POST['Select']);
+  $pois_where = htmlentities($_POST['Where']);
 ?>
+
+<!-- Input form -->
+<form action="<?PHP echo $_SERVER['SCRIPT_NAME'] ?>" method="POST">
+  <table border="0">
+    <tr>
+      <td>Select</td>
+      <td>Where</td>
+
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="Select" maxlength="90" size="30" />
+      </td>
+       <td>
+        <input type="text" name="Where" maxlength="90" size="30" />
+      </td>
+      <td>
+        <input type="submit" value="Submit Query" />
+      </td>
+    </tr>
+  </table>
+</form>
 
 <!-- Display table data. -->
 <table border="1" cellpadding="2" cellspacing="2">
@@ -35,17 +51,34 @@
   </tr>
 
 <?php
+if (strlen($pois_select)) {
+  if(strlen($pois_where)) {
+     $result = mysqli_query($connection, "SELECT $pois_select FROM pois WHERE $pois_where"); 
+  } else {
+     $result = mysqli_query($connection, "SELECT $pois_select FROM pois"); 
+  }
+  while($query_data = mysqli_fetch_row($result)) {
+    echo "<tr>";
+    echo "<td>",$query_data[0], "</td>",
+         "<td>",$query_data[1], "</td>",
+         "<td>",$query_data[2], "</td>",
+         "<td>",$query_data[3], "</td>";
+    echo "</tr>";
+  }
+} else {
+  
+  $result = mysqli_query($connection, "SELECT * FROM pois"); 
 
-$result = mysqli_query($connection, "SELECT * FROM pois"); 
-
-while($query_data = mysqli_fetch_row($result)) {
-  echo "<tr>";
-  echo "<td>",$query_data[0], "</td>",
-       "<td>",$query_data[1], "</td>",
-       "<td>",$query_data[2], "</td>",
-       "<td>",$query_data[3], "</td>";
-  echo "</tr>";
+  while($query_data = mysqli_fetch_row($result)) {
+    echo "<tr>";
+    echo "<td>",$query_data[0], "</td>",
+         "<td>",$query_data[1], "</td>",
+         "<td>",$query_data[2], "</td>",
+         "<td>",$query_data[3], "</td>";
+    echo "</tr>";
+  }
 }
+
 ?>
 
 </table>
@@ -93,3 +126,4 @@ function TableExists($tableName, $connection, $dbName) {
   return false;
 }
 ?>
+                
