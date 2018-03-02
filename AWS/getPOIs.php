@@ -15,8 +15,8 @@
   VerifyPOIsTable($connection, DB_DATABASE); 
 
   /* If input fields are populated, add a row to the Employees table. */
-  $pois_select = htmlentities($_POST['Select']);
-  $pois_where = htmlentities($_POST['Where']);
+  $pois_select = $_POST['Select'];
+  $pois_where = $_POST['Where'];
 ?>
 
 <!-- Input form -->
@@ -51,24 +51,14 @@
   </tr>
 
 <?php
+$pois_test = 'Lat < 35.055';
 if (strlen($pois_select)) {
   if(strlen($pois_where)) {
-     $result = mysqli_query($connection, "SELECT $pois_select FROM pois WHERE $pois_where"); 
+    $result = mysqli_query($connection, "SELECT $pois_select FROM pois WHERE $pois_where");
   } else {
-     $result = mysqli_query($connection, "SELECT $pois_select FROM pois"); 
+    $result = mysqli_query($connection, "SELECT $pois_select FROM pois"); 
   }
-  while($query_data = mysqli_fetch_row($result)) {
-    echo "<tr>";
-    echo "<td>",$query_data[0], "</td>",
-         "<td>",$query_data[1], "</td>",
-         "<td>",$query_data[2], "</td>",
-         "<td>",$query_data[3], "</td>";
-    echo "</tr>";
-  }
-} else {
   
-  $result = mysqli_query($connection, "SELECT * FROM pois"); 
-
   while($query_data = mysqli_fetch_row($result)) {
     echo "<tr>";
     echo "<td>",$query_data[0], "</td>",
@@ -77,8 +67,7 @@ if (strlen($pois_select)) {
          "<td>",$query_data[3], "</td>";
     echo "</tr>";
   }
-}
-
+} 
 ?>
 
 </table>
@@ -126,4 +115,3 @@ function TableExists($tableName, $connection, $dbName) {
   return false;
 }
 ?>
-                
