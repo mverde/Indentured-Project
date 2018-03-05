@@ -1,0 +1,6 @@
+c:\users\hjgor\documents\visual studio 2015\Projects\130ServerApp\130ServerApp\bin\Debug\130ServerApp.exe.config
+c:\users\hjgor\documents\visual studio 2015\Projects\130ServerApp\130ServerApp\bin\Debug\130ServerApp.exe
+c:\users\hjgor\documents\visual studio 2015\Projects\130ServerApp\130ServerApp\bin\Debug\130ServerApp.pdb
+c:\users\hjgor\documents\visual studio 2015\Projects\130ServerApp\130ServerApp\obj\Debug\130ServerApp.csprojResolveAssemblyReference.cache
+c:\users\hjgor\documents\visual studio 2015\Projects\130ServerApp\130ServerApp\obj\Debug\130ServerApp.exe
+c:\users\hjgor\documents\visual studio 2015\Projects\130ServerApp\130ServerApp\obj\Debug\130ServerApp.pdb
