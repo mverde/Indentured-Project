@@ -1,8 +1,7 @@
 // ServerCall.cpp
 // Overview: ServerCall.cpp will be used to connect to the AWS server and retrieve desired points of interests stored in the database
 
-// To compile: g++ ServerCall.cpp -static-libstdc++ -o ServerCallTest.exe
-
+#include "ServerCall.h"
 #include <string>
 #include <sstream>
 #include <vector>
@@ -10,45 +9,45 @@
 #include <iostream>
 #include <ctime>
 #include <algorithm>
+#include <math.h>
 
 using namespace std;
 
-// A structure to define a point of interest
-struct Place
-{
-	string name;
-	double latitude;
-	double longitude;
-	string type;
-};
+// Constants used to convert degrees to meters
+const int EARTH_RADIUS_METERS = 6371000;
+const double PI = 3.14159265358979;
+const double ONE_EIGHTY_DIV_PI = 180.0 / PI;
+const double PI_DIV_ONE_EIGHTY = PI / 180.0;
 
-string placeToString(Place p)
+
+// Algorithm borrowed from our Python script creators
+
+// The following two functions will convert meters to latitude/longitude
+double metersToLat(double meters)
 {
-	return p.name + ", " + to_string(p.latitude) + ", " + to_string(p.longitude) + ", " + p.type;
+	return (meters / EARTH_RADIUS_METERS) * ONE_EIGHTY_DIV_PI;
 }
 
-void printStringVector(vector<string> v)
+double metersToLong(double latitude, double meters)
 {
-	vector<string>::iterator i, end = v.end();
-	for(i = v.begin(); i != end; i++)
-	{
-		cout << *i << " ";
-	}
-	cout << endl;
+	return (meters / EARTH_RADIUS_METERS) * ONE_EIGHTY_DIV_PI / cos(latitude * PI_DIV_ONE_EIGHTY);
 }
 
-void printPlaceVector(vector<Place> v)
+// The following function will add two degree values
+double addDegrees(double d1, double d2)
 {
-	vector<Place>::iterator i, end = v.end();
-	for(i = v.begin(); i != end; i++)
-	{
-		cout << placeToString(*i) << " ";
-	}
-	cout << endl;
+	double newDegree = d1 + d2;
+
+	if (newDegree > 180.0)
+        return -180.0 + (newDegree - 180.0);
+    else if (newDegree < -180.0)
+        return 180.0 + (newDegree + 180.0);
+    
+    return newDegree;
 }
+
 
 // Split by delimiter function obtained from: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
-
 template<typename Out>
 void split(const string &s, char delim, Out result) {
     stringstream ss(s);
@@ -64,28 +63,6 @@ vector<string> split(const string &s, char delim) {
     return elems;
 }
 
-// This class handles server connections and the querying of the server database
-class ServerCall
-{
-public:
-	// Constructor; Parameters not specified yet
-	ServerCall(int options);
-
-	// This function will find all locations within a square of side length 2*maxRange centered around the specified coordinate
-	vector<Place> queryDatabase(double latitude, double longitude, double maxRange);
-
-	// This funtion will return at most numPlaces within a square of side length 2*maxRange centered around the specified coordinate
-	// And will return results that follow the filtering rules, which are to be specified in CNF format:
-	// Filter array: [[filter1,filter2,filter3][filter4][filter5,filter6]] will return places that has 
-	// [filter1 OR filter2 OR filter3] AND [filter4] AND [filter5 OR filter6]
-	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters);
-	
-	// SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
-	// MaxRange will specify how far away from the line a place can be
-	// Additionally, only places that satisfy the filters will be accepted in the output
-	// This function will return a vector of Places that meet the requirements, which are specified in CNF format
-	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters);
-};
 
 
 // The constructor will set up a connection with the AWS server to allow for database querying
@@ -112,8 +89,16 @@ vector<string> dummyServerResults()
 // This function will get the locations in a square around the specified coordinate
 vector<Place> ServerCall::queryDatabase(double latitude, double longitude, double maxRange)
 {
-	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
+	// First need to get the longitude and latitude range for the search
+	double deltaLat = metersToLat(maxRange);
+	double lowLat = addDegrees(latitude, -deltaLat);
+	double highLat = addDegrees(latitude, deltaLat);
 
+	double deltaLong = metersToLong(latitude, maxRange);
+	double lowLong = addDegrees(longitude, -deltaLong);
+	double highLong = addDegrees(longitude, deltaLong);
+
+	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
 	// We will assume that serverResult has meaningful items for now, since the server is not set up yet
 	// For now, we insert dummy test data to serverResult
 	vector<string> serverResult = dummyServerResults();
@@ -168,7 +153,7 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 vector<Place> filterPlaces(vector<Place> places, string filters)
 {
 	vector<Place> outputVector;
-	//cout << "FILTER BEGINNING:" << endl;
+
 	// Split the filter into the OR filter types, where each row in the vector is a string of AND filter types
 	vector<string> filterGroupVector = split(filters, '|');
 	vector<vector<string>> filterVector;
@@ -188,7 +173,6 @@ vector<Place> filterPlaces(vector<Place> places, string filters)
 	for(placesIterator = places.begin(); placesIterator != placesEnd; placesIterator++)
 	{
 		string currPlaceTypes = (*placesIterator).type;
-		//cout << endl << placeToString(*placesIterator) << endl;
 
 		// Go through each OR statement until one is satisfied
 		vector<vector<string>>::iterator orStatementIterator, orStatementEnd = filterVector.end();
@@ -204,7 +188,6 @@ vector<Place> filterPlaces(vector<Place> places, string filters)
 				// If it fails one of these filters, then break out of this loop and go to the next set of AND statements
 				if(currPlaceTypes.find(*andStatementIterator) == string::npos)
 				{
-					//cout << "FAILED CURRENT FILTER" << endl;
 					passesFilters = false;
 					break;
 				}
@@ -245,7 +228,6 @@ vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
 	{
 		// Will select one of the indices of our place vector
 		int currIndex = rand() % vectorSize;
-		//cout << vectorSize << " " << currIndex << endl;
 
 		// Check if this index was already chosen to be in our array
 		bool indexExists = false;
@@ -291,8 +273,6 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 
 	// Now we need to filter the results in dbPlaceVec based on the input filters
 
-
-
 	// If a filter is specified, filter our Places
 	if(filters != "")
 		outputPlaces = filterPlaces(dbPlaceVec, filters);
@@ -312,7 +292,6 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters)
 {
 	vector<Place> outputPlaces;
-
 
 	if(numPlaces < 1)
 		return outputPlaces;
@@ -343,84 +322,4 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	}
 
 	return outputPlaces;
-}
-
-
-int main()
-{
-	ServerCall test = ServerCall(1);
-
-	// Should return all places returned by the database
-	cout << "Test Return All Locations:" << endl;
-	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	// Should only return places that contain specific types
-	cout << endl << "Filter Test 1: type8" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,4,"type8");
-
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	cout << endl << "Filter Test 2: type3,type4" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,4,"type3,type4");
-
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	cout << endl << "Filter Test 3: type3,type4|type8" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,6,"type3,type4|type8");
-
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	cout << endl << "Filter Test 4: type8|type4,type3" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,6,"type8|type4,type3");
-
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	// Should only return one place
-	cout << endl << "Number of Places Test 1: Return 1 Place" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,1,"");
-
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	cout << endl << "Number of Places Test 2: Return 3 Places" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,3,"");
-
-	for(int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-
-	// Should return random locations from the database
-	cout << endl << "Random Location Selection Test:" << endl;
-	poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
-	for(int i = 0; i < 5; i++)
-	{
-		vector<Place> curr = randomSelectPlaces(poi, 1);
-		cout << placeToString(curr[0]) << endl;
-	}
 }
