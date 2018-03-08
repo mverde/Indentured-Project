@@ -156,13 +156,19 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
     locations = []
     
     for gridCenter in searchGrid:
-        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        # print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
         locations += getCertainTypesOfResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
     
-    # for item in locations:
-    #     print ("locations: ", item)
+    results = []
 
-    return locations
+    for item in locations:
+        for loc in item:
+            results.append(loc)
+
+    # for x in results:
+    #     print(x['name'])
+
+    return results
 
 
 def addToDB(array):
@@ -240,12 +246,12 @@ def main():
     centerLong = float(sys.argv[2])
     searchRadius = float(sys.argv[3])
 
-    # searchArea(centerLat, centerLong, searchRadius)
+    searchArea(centerLat, centerLong, searchRadius)
     
-    if searchRadius >= 250:
-        addToDB(searchArea(centerLat, centerLong, searchRadius))
-    else:
-        print ("Usage: search radius must be >= 250 meters")
+    # if searchRadius >= 250:
+    #     addToDB(searchArea(centerLat, centerLong, searchRadius))
+    # else:
+    #     print ("Usage: search radius must be >= 250 meters")
 
     # ================= Testing for Melissa  ================= #
     # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
