@@ -360,7 +360,8 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	{
 		// Find a location at the current coordinate
 		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1, filters);
-		outputPlaces.push_back(currPlace[0]);
+		if(!currPlace.empty())
+			outputPlaces.push_back(currPlace[0]);
 
 		// Move to the next coordinate in the line
 		currLong += longitudeStep;
