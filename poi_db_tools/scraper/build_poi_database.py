@@ -248,10 +248,10 @@ def main():
 
     searchArea(centerLat, centerLong, searchRadius)
     
-    # if searchRadius >= 250:
-    #     addToDB(searchArea(centerLat, centerLong, searchRadius))
-    # else:
-    #     print ("Usage: search radius must be >= 250 meters")
+    if searchRadius >= 250:
+        addToDB(searchArea(centerLat, centerLong, searchRadius))
+    else:
+        print ("Usage: search radius must be >= 250 meters")
 
     # ================= Testing for Melissa  ================= #
     # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])

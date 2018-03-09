@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 /* Standard C++ includes */
 #include <stdlib.h>
 #include <iostream>
+#include<string> 
 
 /*
   Include directly the different
@@ -34,45 +35,63 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
 
 using namespace std;
 
-int main(void)
+int main(int argc, char *argv[])
 {
-cout << endl;
-cout << "Running 'SELECT 'Hello World!' »
-   AS _message'..." << endl;
 
 try {
+  /* Initialize Variables */
+  //////////////////////////
   sql::Driver *driver;
   sql::Connection *con;
-  sql::Statement *stmt;
+  //sql::Statement *stmt;
+  sql::PreparedStatement *prep_stmt;
   sql::ResultSet *res;
 
   /* Create a connection */
+  /////////////////////////
   driver = get_driver_instance();
-  con = driver->connect("tcp://127.0.0.1:3306", "root", "root");
+  //set the variables for connection to the database : endpoint, username, password
+  con = driver->connect("escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com", "escality_user", "12345678");
   /* Connect to the MySQL test database */
-  con->setSchema("test");
+  con->setSchema("escality_location_db");
 
-  stmt = con->createStatement();
-  res = stmt->executeQuery("SELECT 'Hello World!' AS _message");
+  /*Use either a static query (comment the variable declaration for prep_stmt and delete prep_stmt, uncomment out stmt and delete stmt)*/
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //stmt = con->createStatement();
+  //res = stmt->executeQuery("SELECT * FROM pois");
+
+  
+  /*Or a dynamic query (uncomment the variable declaration for prep_stmt and delete prep_stmt, comment out stmt and delete stmt)*/
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //get user input
+  cout << "Enter your query" << endl;
+  string query;
+  getline(cin, query);
+  //turn input into a query and execute
+  prep_stmt = con->prepareStatement(query);
+  res = prep_stmt->executeQuery();
+
+
+  /*print out the result of your query*/
   while (res->next()) {
-    cout << "\t... MySQL replies: ";
-    /* Access column data by alias or column name */
-    cout << res->getString("_message") << endl;
-    cout << "\t... MySQL says it again: ";
-    /* Access column data by numeric offset, 1 is the first column */
-    cout << res->getString(1) << endl;
+    //for each tuple result, we use getString("attribute") to retrieve the data corrosponding to the attribute name
+    cout << res->getString("Place") << endl;
   }
+
+  /*clean up*/
   delete res;
-  delete stmt;
+  //delete stmt;
+  delete prep_stmt;
   delete con;
 
 } catch (sql::SQLException &e) {
   cout << "# ERR: SQLException in " << __FILE__;
-  cout << "(" << __FUNCTION__ << ") on line " »
-     << __LINE__ << endl;
+  cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
   cout << "# ERR: " << e.what();
   cout << " (MySQL error code: " << e.getErrorCode();
   cout << ", SQLState: " << e.getSQLState() << " )" << endl;
