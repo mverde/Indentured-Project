@@ -1,4 +1,5 @@
-// To compile: g++ ServerCall.cpp ServerCallTest.cpp -static-libstdc++ -o Test.exe
+// To compile locally: g++ ServerCall.cpp ServerCallTest.cpp -static-libstdc++ -o Test.exe
+// To compile on AWS: sudo g++ -std=c++0x -Wall -I/usr/include/cppconn -o TestCall ServerCall.cpp ServerCallTest.cpp -L/usr/lib -lmysqlcppconn
 
 #include "ServerCall.h"
 
@@ -31,10 +32,40 @@ void printPlaceVector(vector<Place> v)
 int main()
 {
 	ServerCall test = ServerCall();
+	vector<Place> poi;
 
 	// Should return all places returned by the database
+	cout << "Test Return 5 Locations:" << endl;
+	poi = test.SearchByCoordinate(34.05,-118.24,20000,5,"");
+	for(unsigned int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+	cout << endl;
+
+	cout << "Test Filter for 5 food places:" << endl;
+	poi = test.SearchByCoordinate(34.05,-118.24,20000,5,"food");
+	for(unsigned int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+	cout << endl;
+	
+	cout << "Test Filter for 10 food or parking:" << endl;
+	poi = test.SearchByCoordinate(34.05,-118.24,20000,10,"food|parking");
+	for(unsigned int i = 0; i < poi.size(); i++)
+	{
+		string str = placeToString(poi[i]);
+		cout << str << endl;
+	}
+
+	// Test results used for testing with the dummy server results
+	/*
+	// Should return all places returned by the database
 	cout << "Test Return All Locations:" << endl;
-	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,1.0,7,"");
+	vector<Place> poi = test.SearchByCoordinate(1.0,1.0,0,7,"");
 	for(int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);
@@ -96,4 +127,5 @@ int main()
 		string str = placeToString(poi[i]);
 		cout << str << endl;
 	}
+	*/
 }

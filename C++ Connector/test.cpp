@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 /* Standard C++ includes */
 #include <stdlib.h>
 #include <iostream>
-#include<string> 
+#include <string> 
 
 /*
   Include directly the different
@@ -80,7 +80,7 @@ try {
   /*print out the result of your query*/
   while (res->next()) {
     //for each tuple result, we use getString("attribute") to retrieve the data corrosponding to the attribute name
-    cout << res->getString("Place") << endl;
+    cout << res->getString("Place") << "," << res->getString("Lat") << "," << res->getString("Lng") << "," << res->getString("Types") << endl;
   }
 
   /*clean up*/

@@ -68,8 +68,28 @@ vector<string> split(const string &s, char delim) {
 // The constructor will set up a connection with the AWS server to allow for database querying
 ServerCall::ServerCall(int options)
 {
-	// To be implemented once the AWS is running
+	// Initialize srand for randomly selecting locations when requested
 	srand(time(NULL));
+
+	// Set up the connection to the sql database
+	
+	try {
+		// Create a connection 
+		/////////////////////////
+		driver = get_driver_instance();
+		//set the variables for connection to the database : endpoint, username, password
+		con = driver->connect("escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com", "escality_user", "12345678");
+		// Connect to the MySQL test database 
+		con->setSchema("escality_location_db");
+
+	} catch (sql::SQLException &e) {
+	  cout << "# ERR: SQLException in " << __FILE__;
+	  cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+	  cout << "# ERR: " << e.what();
+	  cout << " (MySQL error code: " << e.getErrorCode();
+	  cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+	} 
+	
 }
 
 vector<string> dummyServerResults()
@@ -98,11 +118,37 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 	double lowLong = addDegrees(longitude, -deltaLong);
 	double highLong = addDegrees(longitude, deltaLong);
 
-	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
-	// We will assume that serverResult has meaningful items for now, since the server is not set up yet
-	// For now, we insert dummy test data to serverResult
-	vector<string> serverResult = dummyServerResults();
+	// Create the rds query string
+	string query = "select * from pois where lat > " + to_string(lowLat) + 
+					" and lat < " +	to_string(highLat) + 
+					" and lng > " +	to_string(lowLong) + 
+					" and lng < " +	to_string(highLong);
 
+	//cout << query << endl;
+	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
+	vector<string> serverResult;
+
+	// Run the query on the server
+	sql::PreparedStatement *prep_stmt;
+	sql::ResultSet *res;
+	prep_stmt = con->prepareStatement(query);
+	res = prep_stmt->executeQuery();
+
+	// For every server result, turn it into a comma separated string and add it to the serverResult vector
+	while (res->next()) {
+		//for each tuple result, we use getString("attribute") to retrieve the data corrosponding to the attribute name
+		string currResult = res->getString("Place") + "," + 
+							res->getString("Lat") + "," + 
+							res->getString("Lng") + "," + 
+							res->getString("Types");
+
+		serverResult.push_back(currResult);
+		// cout << res->getString("Place") << "," << res->getString("Lat") << "," << res->getString("Lng") << "," << res->getString("Types") << endl;
+	}
+
+	// clean up
+	delete res;
+	delete prep_stmt;
 
 	// dbPlaceVec will hold Places that were returned by the database query (filtering will happen later)
 	vector<Place> dbPlaceVec;

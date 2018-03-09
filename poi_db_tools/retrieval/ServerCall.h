@@ -9,6 +9,15 @@
 #include <ctime>
 #include <algorithm>
 
+
+#include "mysql_connection.h"
+
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+
 using namespace std;
 
 // A structure to define a point of interest
@@ -26,7 +35,7 @@ class ServerCall
 {
 public:
 	// Constructor; Parameters not yet specified
-	ServerCall(int options = 0);
+	ServerCall(int options = 0);	
 
 	// This funtion will return at most numPlaces within a square of side length 2*maxRange centered around the specified coordinate
 	// (where maxRange is specified in meters)
@@ -47,7 +56,8 @@ private:
 	// This function will return all locations within a square of side length 2*maxRange centered around the specified coordinate
 	// Mainly used as a helper function for SearchByCoordinate
 	vector<Place> queryDatabase(double latitude, double longitude, double maxRange);
-
+	sql::Driver *driver;
+  	sql::Connection *con;
 };
 
 
