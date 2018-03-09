@@ -55,6 +55,8 @@ public class TCPConnection : MonoBehaviour
     public string readSocket()
     {
         String result = "";
+        if (theStream == null)
+            return result;
         if (theStream.DataAvailable)
         {
             Byte[] inStream = new Byte[mySocket.SendBufferSize];
