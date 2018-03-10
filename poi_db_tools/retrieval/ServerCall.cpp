@@ -20,8 +20,7 @@ const double ONE_EIGHTY_DIV_PI = 180.0 / PI;
 const double PI_DIV_ONE_EIGHTY = PI / 180.0;
 
 
-// Algorithm borrowed from our Python script creators
-
+// Conversion algorithms borrowed from our Python script creators
 // The following two functions will convert meters to latitude/longitude
 double metersToLat(double meters)
 {
@@ -31,6 +30,16 @@ double metersToLat(double meters)
 double metersToLong(double latitude, double meters)
 {
 	return (meters / EARTH_RADIUS_METERS) * ONE_EIGHTY_DIV_PI / cos(latitude * PI_DIV_ONE_EIGHTY);
+}
+
+double latToMeters(double lat)
+{
+	return (lat * EARTH_RADIUS_METERS * PI_DIV_ONE_EIGHTY);
+}
+
+double longToMeters(double latitude, double longitude)
+{
+	return (longitude * EARTH_RADIUS_METERS * PI_DIV_ONE_EIGHTY * cos(latitude * PI_DIV_ONE_EIGHTY));
 }
 
 // The following function will add two degree values
@@ -64,9 +73,8 @@ vector<string> split(const string &s, char delim) {
 }
 
 
-
 // The constructor will set up a connection with the AWS server to allow for database querying
-ServerCall::ServerCall(int options)
+ServerCall::ServerCall()
 {
 	// Initialize srand for randomly selecting locations when requested
 	srand(time(NULL));
@@ -119,10 +127,10 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 	double highLong = addDegrees(longitude, deltaLong);
 
 	// Create the rds query string
-	string query = "select * from pois where lat > " + to_string(lowLat) + 
-					" and lat < " +	to_string(highLat) + 
-					" and lng > " +	to_string(lowLong) + 
-					" and lng < " +	to_string(highLong);
+	string query = "select * from pois where lat >= " + to_string(lowLat) + 
+					" and lat <= " +	to_string(highLat) + 
+					" and lng >= " +	to_string(lowLong) + 
+					" and lng <= " +	to_string(highLong);
 
 	//cout << query << endl;
 	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
@@ -302,11 +310,15 @@ vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
 
 }
 
+
+
 // SearchByCoordinate will find at most numPlaces that are in maxRange radius from the specified coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
 // If filters is empty (filters == ""), then filtering is not required
-vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters)
+// maxRangeIncr is used if you want to override the maximum extra range that the function will look in
+// maxRangeIncr is default set to maxRangeIncrement = rangeIncrement * maxIncrementAttempts
+vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters, double maxRangeIncr)
 {
 	// This is where we will store places that meet the required criteria
 	vector<Place> outputPlaces;
@@ -318,7 +330,6 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	vector<Place> dbPlaceVec = queryDatabase(latitude, longitude, maxRange);
 
 	// Now we need to filter the results in dbPlaceVec based on the input filters
-
 	// If a filter is specified, filter our Places
 	if(filters != "")
 		outputPlaces = filterPlaces(dbPlaceVec, filters);
@@ -326,7 +337,36 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	//Otherwise, retain all Places
 		outputPlaces = dbPlaceVec;
 
-	// Out of the remaining places, select up to numPlaces to return
+
+	// We will now attempt to find more than numPlaces if there were fewer than that number after filtering
+	double currExtraRange = rangeIncrement;
+	unsigned int uint_numPlaces = (unsigned int) numPlaces;
+
+	// Will try up to maxIncrementAttempts times to get enough POIs to satisfy numPlaces
+	for(int i = 0; i < maxIncrementAttempts; i++, currExtraRange += rangeIncrement)
+	{
+		// If we have enough POIs or if we hit the maximum range extension, stop the loop
+		if(outputPlaces.size() >= uint_numPlaces || currExtraRange > maxRangeIncr)
+			break;
+
+		// Clear out the vectors
+		dbPlaceVec.clear();
+		outputPlaces.clear();
+
+		// Query the database with the increased range
+		dbPlaceVec = queryDatabase(latitude, longitude, maxRange + currExtraRange);
+
+		// Now we need to filter the results in dbPlaceVec based on the input filters
+		// If a filter is specified, filter our Places
+		if(filters != "")
+			outputPlaces = filterPlaces(dbPlaceVec, filters);
+		else
+		//Otherwise, retain all Places
+			outputPlaces = dbPlaceVec;
+	}
+	
+
+	// Out of the remaining places that satisfy the filter, select up to numPlaces to return
 	outputPlaces = randomSelectPlaces(outputPlaces, numPlaces);
 
 	return outputPlaces;
@@ -341,7 +381,7 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 
 	if(numPlaces < 1)
 		return outputPlaces;
-	// If only one place is requested, just return a place near the init coordinate
+	// If only one place is requested, just return a place near the init coordinate, since we can't make a line
 	else if(numPlaces == 1)
 		return SearchByCoordinate(initLatitude, initLongitude, maxRange, numPlaces, filters);
 
@@ -356,16 +396,83 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	double longitudeStep = longitudeChange / (numPlaces - 1);
 	double latitudeStep = longitudeStep * slope;
 
+
+	// This variable is used in the case that the first locations didn't have enough POIs
+	// So it will try to make up by finding more POIs in future locations
+	int backlogSize = 0;
+
+	// Will store how many locations we use from each index
+	unsigned int numPOIs[numPlaces];
+	for(int i = 0; i < numPlaces; i++)
+		numPOIs[i] = 0;
+
+	// For each area along the line
 	for(int i = 0; i < numPlaces; i++)
 	{
-		// Find a location at the current coordinate
-		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1, filters);
-		if(!currPlace.empty())
-			outputPlaces.push_back(currPlace[0]);
+		// Find a location at the current coordinate (finding extra if the backlog is non-zero)
+		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1 + backlogSize, filters);
 
-		// Move to the next coordinate in the line
-		currLong += longitudeStep;
-		currLat += latitudeStep;
+		// If a POI was found in this area
+		if(!currPlace.empty())
+		{
+			unsigned int numFound = currPlace.size();
+			// State how many POIs were found in this current location
+			numPOIs[i] = numFound;
+			// Update the backlogSize
+			backlogSize -= (numFound - 1);
+
+			// Add the POI(s) to the output list
+			outputPlaces.insert(outputPlaces.end(), currPlace.begin(), currPlace.end());
+			// Move to the next coordinate in the line
+			currLong += longitudeStep;
+			currLat += latitudeStep;
+		}
+		// If a POI was not found in this area, we will attempt to search previous areas
+		// It will only do this if the backlogSize is 0, since if it is > 0, then it means we already failed
+		// to find extra locations in the previous areas
+		else if (backlogSize == 0)
+		{
+			int j;
+			// We will attempt to find more POIs in the previous areas
+			for(j = i - 1; j >= 0; j--)
+			{
+				// If the area j found a POI, try to find an extra POI there
+				unsigned int numFound = numPOIs[j];
+				if(numFound != 0)
+				{
+					// Calculate the coordinates of the old location
+					double prevLat = initLatitude + latitudeStep * j;
+					double prevLong = initLongitude + longitudeStep * j;
+
+					// We will search for an extra POI here
+					currPlace = SearchByCoordinate(prevLat, prevLong, maxRange, numFound + 1, filters);
+
+					// If we successfully found an extra POI at this location
+					if(currPlace.size() == numFound + 1)
+					{
+						// To avoid adding the same location multiple times, we remove POIs found in this old area
+						for(unsigned int k = 0; k < numFound; k++)
+							outputPlaces.erase(outputPlaces.begin() + j);
+
+						// Add the new POIs to the output list
+						outputPlaces.insert(outputPlaces.begin() + j, currPlace.begin(), currPlace.end());
+						numPOIs[j]++;
+
+						// We now leave the loop since we found an extra POI here
+						break;
+					}
+					// Otherwise, we go to the following previous location and try again
+				}
+			}
+
+			// If we couldn't find any extra POIs in the previous locations, increment our backlog to search
+			// for extra POIs in future locations
+			if(j == -1)
+				backlogSize++;
+		}
+		// If backlogSize was non-zero, there is no point in searching previous areas
+		else
+			backlogSize++;
 	}
 
 	return outputPlaces;

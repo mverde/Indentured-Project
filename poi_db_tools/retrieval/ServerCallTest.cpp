@@ -33,10 +33,11 @@ int main()
 {
 	ServerCall test = ServerCall();
 	vector<Place> poi;
+	cout << endl << "Beginning of Tests:" << endl;
 
 	// Should return all places returned by the database
-	cout << "Test Return 5 Locations:" << endl;
-	poi = test.SearchByCoordinate(34.05,-118.24,20000,5,"");
+	cout << "Return 5 Locations:" << endl;
+	poi = test.SearchByCoordinate(34.05,-118.24,20,5,"");
 	for(unsigned int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);
@@ -44,8 +45,8 @@ int main()
 	}
 	cout << endl;
 
-	cout << "Test Filter for 5 food places:" << endl;
-	poi = test.SearchByCoordinate(34.05,-118.24,20000,5,"food");
+	cout << "Filter for 5 food places:" << endl;
+	poi = test.SearchByCoordinate(34.05,-118.24,20,5,"food");
 	for(unsigned int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);
@@ -53,8 +54,8 @@ int main()
 	}
 	cout << endl;
 	
-	cout << "Test Filter for 10 food or parking:" << endl;
-	poi = test.SearchByCoordinate(34.05,-118.24,20000,10,"food|parking");
+	cout << "Filter for 10 food or parking:" << endl;
+	poi = test.SearchByCoordinate(34.05,-118.24,20,10,"food|parking");
 	for(unsigned int i = 0; i < poi.size(); i++)
 	{
 		string str = placeToString(poi[i]);

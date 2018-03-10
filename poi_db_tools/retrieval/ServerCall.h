@@ -9,7 +9,6 @@
 #include <ctime>
 #include <algorithm>
 
-
 #include "mysql_connection.h"
 
 #include <cppconn/driver.h>
@@ -19,6 +18,11 @@
 #include <cppconn/prepared_statement.h>
 
 using namespace std;
+
+// Constants used in area range expansion when not enough POIs are found
+const double rangeIncrement = 805; // 805 meters = 0.5 miles
+const int maxIncrementAttempts = 4;
+const double maxRangeIncrement = rangeIncrement * maxIncrementAttempts;
 
 // A structure to define a point of interest
 // The type string will be a comma separated string, where each value is one of the location's types
@@ -34,8 +38,8 @@ struct Place
 class ServerCall
 {
 public:
-	// Constructor; Parameters not yet specified
-	ServerCall(int options = 0);	
+	// Constructor
+	ServerCall();	
 
 	// This funtion will return at most numPlaces within a square of side length 2*maxRange centered around the specified coordinate
 	// (where maxRange is specified in meters)
@@ -44,7 +48,9 @@ public:
 	// "type1,type2,type3|type4|type5,type6"
 	// This filter string makes it so that the Places returned by this function will have
 	// (type1, type2, and type 3) OR type 4 OR (type 5 and type 6) in the Place's types
-	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters);
+	// maxRangeIncr is an optional parameter in case you want to specify the maximum range expansion when searching for POIs
+	// (maximum range expansion will increase the search range to a larger area if the smaller area found fewer than numPlaces POIs)
+	vector<Place> SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters, double maxRangeIncr = maxRangeIncrement);
 	
 	// SearchByLine will find numPlaces that are in a line between the initial coordinate and the end coordinate
 	// MaxRange will specify how far away from the line a place can be
