@@ -39,6 +39,7 @@ class ServerCall
 {
 public:
 	// Constructor
+	// Sets up connection to the RDS on the AWS server
 	ServerCall();	
 
 	// This funtion will return at most numPlaces within a square of side length 2*maxRange centered around the specified coordinate
@@ -57,6 +58,13 @@ public:
 	// Additionally, only places that satisfy the filters will be accepted in the output
 	// This function will return a vector of Places that meet the requirements, which are specified in the aforementioned format for the filters string
 	vector<Place> SearchByLine(double initLatitude, double initLongitude, double endLatitude, double endLongitude, double maxRange, int numPlaces, string filters);
+
+
+	//**********************************************************//
+	// Helper functions for SearchByCoordinate
+	// Set to public functions for the sake of testing
+	vector<Place> filterPlaces(vector<Place> places, string filters);
+	vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces);	
 
 private:
 	// This function will return all locations within a square of side length 2*maxRange centered around the specified coordinate

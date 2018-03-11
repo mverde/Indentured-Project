@@ -117,6 +117,9 @@ vector<string> dummyServerResults()
 // This function will get the locations in a square around the specified coordinate
 vector<Place> ServerCall::queryDatabase(double latitude, double longitude, double maxRange)
 {
+	if(maxRange < 1)
+		maxRange = 1;
+
 	// First need to get the longitude and latitude range for the search
 	double deltaLat = metersToLat(maxRange);
 	double lowLat = addDegrees(latitude, -deltaLat);
@@ -204,7 +207,7 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 // "type1,type2,type3|type4|type5,type6"
 // This filter string makes it so that the Places returned by this function will have
 // (type1, type2, and type 3) OR type 4 OR (type 5 and type 6) in the Place's type string
-vector<Place> filterPlaces(vector<Place> places, string filters)
+vector<Place> ServerCall::filterPlaces(vector<Place> places, string filters)
 {
 	vector<Place> outputVector;
 
@@ -263,7 +266,7 @@ vector<Place> filterPlaces(vector<Place> places, string filters)
 }
 
 // This function will select numPlaces for a Place vector randomly
-vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
+vector<Place> ServerCall::randomSelectPlaces(vector<Place> places, int numPlaces)
 {
 	int selectedPlaceIndices [numPlaces];
 	
@@ -309,7 +312,6 @@ vector<Place> randomSelectPlaces(vector<Place> places, int numPlaces)
 	return selectedPlaces;
 
 }
-
 
 
 // SearchByCoordinate will find at most numPlaces that are in maxRange radius from the specified coordinate

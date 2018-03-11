@@ -24,43 +24,149 @@ void printPlaceVector(vector<Place> v)
 	vector<Place>::iterator i, end = v.end();
 	for(i = v.begin(); i != end; i++)
 	{
-		cout << placeToString(*i) << " ";
+		cout << placeToString(*i) << endl;
 	}
 	cout << endl;
 }
 
-int main()
+void runRandomSelectionTests(ServerCall sc, bool printOutputs = true)
 {
-	ServerCall test = ServerCall();
+	cout << "Beginning Random Selection Tests:" << endl;
 	vector<Place> poi;
-	cout << endl << "Beginning of Tests:" << endl;
 
-	// Should return all places returned by the database
-	cout << "Return 5 Locations:" << endl;
-	poi = test.SearchByCoordinate(34.05,-118.24,20,5,"");
-	for(unsigned int i = 0; i < poi.size(); i++)
+	poi.clear();
+	poi = sc.SearchByCoordinate(34.0507,-118.24,500,15,"");
+
+	
+	cout << "Dataset used for random selection tests:" << endl;
+	if(printOutputs)
+		printPlaceVector(poi);
+	
+
+	cout << "Select 3 random locations (5 times):" << endl;
+	if(printOutputs)
 	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
+		for(int i = 0; i < 5; i++)
+		{
+			cout << "Selection " << i << ":" << endl;
+			printPlaceVector(sc.randomSelectPlaces(poi, 3));
+		}
 	}
-	cout << endl;
+}
+
+Place makePlace(string n, double lat, double lng, string t)
+{
+	Place newPlace;
+	newPlace.name = n;
+	newPlace.latitude = lat;
+	newPlace.longitude = lng;
+	newPlace.type = t;
+
+	return newPlace;
+}
+
+void runFilterTests(ServerCall sc, bool printOutputs = true)
+{
+	vector<Place> dummyPlaces;
+	dummyPlaces.push_back(makePlace("Place1",10.0,100.0,"type1,type2,type8"));
+	dummyPlaces.push_back(makePlace("Place2",12.0,102.0,"type1,type3,type4,type5,type6"));
+	dummyPlaces.push_back(makePlace("Place3",14.0,124.0,"type1,type7,type9"));
+	dummyPlaces.push_back(makePlace("Place4",16.0,126.0,"type6,type3,type10,type8,type2"));
+	dummyPlaces.push_back(makePlace("Place5",18.0,128.0,"type9,type4,type3"));
+	dummyPlaces.push_back(makePlace("Place6",20.0,130.0,"type1,type6,type8"));
+	dummyPlaces.push_back(makePlace("Place7",22.0,132.0,"type12,type3,type4,type8,type10"));
+
+	cout << "Beginning Filtering Tests:" << endl;
+	cout << "Data set used for filtering tests:" << endl;
+	if(printOutputs)
+		printPlaceVector(dummyPlaces);
+
+	vector<Place> poi;
+
+	cout << "Return Places of type2:" << endl;
+	poi.clear();
+	poi = sc.filterPlaces(dummyPlaces,"type2");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	cout << "Return Places of type2|type8:" << endl;
+	poi.clear();
+	poi = sc.filterPlaces(dummyPlaces,"type2|type8");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	cout << "Return Places of type2,type8:" << endl;
+	poi.clear();
+	poi = sc.filterPlaces(dummyPlaces,"type2,type10");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	cout << "Return Places of type50: (should be none)" << endl;
+	poi.clear();
+	poi = sc.filterPlaces(dummyPlaces,"type50");
+	if(printOutputs)
+		printPlaceVector(poi);
+}
+
+void runCoordSearchTests(ServerCall sc, bool printOutputs = true)
+{
+	cout << "Beginning Coordinate Search Tests:" << endl;
+	vector<Place> poi;
+
+	cout << "Return JiST cafe: " << endl;
+	poi.clear();
+	poi = sc.SearchByCoordinate(34.05077310,-118.24037730,1,1,"cafe,restaurant,food,point_of_interest,establishment");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	cout << "Return 5 Locations:" << endl;
+	poi.clear();
+	poi = sc.SearchByCoordinate(34.05,-118.24,20,5,"");
+	if(printOutputs)
+		printPlaceVector(poi);
 
 	cout << "Filter for 5 food places:" << endl;
-	poi = test.SearchByCoordinate(34.05,-118.24,20,5,"food");
-	for(unsigned int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
-	cout << endl;
+	poi.clear();
+	poi = sc.SearchByCoordinate(34.05,-118.24,20,5,"food");
+	if(printOutputs)
+		printPlaceVector(poi);
 	
 	cout << "Filter for 10 food or parking:" << endl;
-	poi = test.SearchByCoordinate(34.05,-118.24,20,10,"food|parking");
-	for(unsigned int i = 0; i < poi.size(); i++)
-	{
-		string str = placeToString(poi[i]);
-		cout << str << endl;
-	}
+	poi.clear();
+	poi = sc.SearchByCoordinate(34.05,-118.24,20,10,"food|parking");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	cout << "Filter for 10 food and cafe:" << endl;
+	poi.clear();
+	poi = sc.SearchByCoordinate(34.05,-118.24,20,10,"food,cafe");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	//return "";
+}
+
+void runLineSearchTests(ServerCall sc, bool printOutputs = true)
+{
+	cout << "Beginning Line Search Tests:" << endl;
+	vector<Place> poi;
+
+	cout << "Return Line of 5 Locations:" << endl;
+	poi.clear();
+	poi = sc.SearchByLine(34.05073240,-118.24543790,34.05648110,-118.24060620,50,5,"");
+	if(printOutputs)
+		printPlaceVector(poi);
+}
+
+int main()
+{
+	ServerCall sc = ServerCall();
+	cout << endl << "Beginning of Tests:" << endl << endl;
+
+	runRandomSelectionTests(sc);
+	runFilterTests(sc);
+	runCoordSearchTests(sc);
+	runLineSearchTests(sc);
 
 	// Test results used for testing with the dummy server results
 	/*
