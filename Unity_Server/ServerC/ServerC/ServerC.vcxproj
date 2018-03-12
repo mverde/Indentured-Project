@@ -111,6 +111,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GameServer.h" />
+    <ClInclude Include="NetworkData.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="SocketConnections.h" />
   </ItemGroup>

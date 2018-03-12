@@ -1,4 +1,10 @@
 #include "Server.h"
+#include "NetworkData.h"
+#include <string.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ServerCall.h>
 
 Server::Server(void)
 {
@@ -105,4 +111,102 @@ bool Server::acceptNewClient(unsigned int & id)
 	}
 
 	return false;
+}
+
+void Server::sendToAll(char * packets, int totalSize)
+{
+	SOCKET currentSocket;
+	std::map<unsigned int, SOCKET>::iterator iter;
+	int iSendResult;
+	
+
+	for (iter = sessions.begin(); iter != sessions.end(); iter++)
+	{
+		currentSocket = iter->second;
+		iSendResult = SocketConnections::sendMessage(currentSocket, packets, totalSize);
+
+		if (iSendResult == SOCKET_ERROR)
+		{
+			printf("send failed with error: %d\n", WSAGetLastError());
+			closesocket(currentSocket);
+		}
+	}
+}
+// receive incoming data
+int Server::receiveData(unsigned int client_id, char * recvbuf)
+{
+	if (sessions.find(client_id) != sessions.end())
+	{
+		if (client_id == 0)
+			return 0;
+		SOCKET currentSocket = sessions[client_id];
+		//iResult = SocketConnections::receiveMessage(currentSocket, recvbuf, MAX_PACKET_SIZE);
+		iResult = SocketConnections::receiveMessage(currentSocket, recvbuf, MAX_PACKET_SIZE);
+		
+		if (strlen(recvbuf) != 0 && recvbuf[0]!='\0')
+		{
+			//char * buh = "30.1999999999223,32.29999230100";
+			string str(recvbuf);
+			//string str(buh);
+			string lat = "";
+			string lon = "";
+			bool BeforeComma = true;
+			for (int i = 0; i < str.length(); i++)
+			{
+				if (str[i] == ',')
+				{
+					BeforeComma = false;
+					continue;
+				}
+
+				if (BeforeComma)
+					lat += (str[i]);
+				else
+					lon += (str[i]);
+					
+			}
+			
+			//cout << "lon: " << lon << endl;
+			//cout << "lat: " << lat << endl;
+
+			std::string::size_type sz;
+
+			double longitude = std::stod(lon,&sz);
+			double latitude = std::stod(lat, &sz);
+
+			//cout << "long double: " << longitude << endl;
+			//cout << "lat double: " << latitude << endl;
+			const unsigned int packet_size = sizeof(Packet);
+
+
+			
+			ServerCall test = ServerCall();
+			vector<Place> poi;
+			poi = test.SearchByCoordinate(latitude, longitude, 20000, 5, "");
+
+			for (unsigned int i = 0; i < poi.size(); i++)
+			{
+				char * outsend = placeToString(poi[i]);
+				sendToAll(outsend, packet_size);
+			}
+			
+			//cout << endl;
+			//CALL C++ API HERE
+			cout << "got message from client: " << recvbuf << endl;
+			cout << "sending query response to client";
+			recvbuf[0] = '\0';
+			
+		}
+
+		
+		if (iResult == 0)
+		{
+			printf("Connection closed\n");
+			closesocket(currentSocket);
+			recvbuf = "";
+		}
+		//printf("iresult: ", iResult);
+		return iResult;
+	}
+	return 0;
 }

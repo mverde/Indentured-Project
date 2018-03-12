@@ -1,4 +1,5 @@
 #include "SocketConnections.h"
+#include "NetworkData.h"
 
 int SocketConnections::sendMessage(SOCKET curSocket, char * message, int messageSize)
 {
@@ -7,5 +8,6 @@ int SocketConnections::sendMessage(SOCKET curSocket, char * message, int message
 
 int SocketConnections::receiveMessage(SOCKET curSocket, char * buffer, int bufSize)
 {
+	//return recv(curSocket, buffer, bufSize, 0);
 	return recv(curSocket, buffer, bufSize, 0);
 }

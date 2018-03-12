@@ -11,7 +11,7 @@ public class TCPConnection : MonoBehaviour
     public string conName = "Localhost";
 
     //ip/address of the server, 127.0.0.1 is for your own computer
-    public string conHost = "127.0.0.1";
+    public string conHost = "13.57.223.42";
 
     //port for the server, make sure to unblock this in your router firewall if you want to allow external connections
     public int conPort = 27015;

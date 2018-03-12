@@ -28,5 +28,8 @@ public:
 
 	// accept new connections
 	bool acceptNewClient(unsigned int & id);
+
+	int receiveData(unsigned int client_id, char * recvbuf);
+	void sendToAll(char * packets, int totalSize);
 };
 
