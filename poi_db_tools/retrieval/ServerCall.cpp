@@ -18,7 +18,7 @@ const int EARTH_RADIUS_METERS = 6371000;
 const double PI = 3.14159265358979;
 const double ONE_EIGHTY_DIV_PI = 180.0 / PI;
 const double PI_DIV_ONE_EIGHTY = PI / 180.0;
-
+const char QUERY_STRING_DELIMITER = '\035';
 
 // Conversion algorithms borrowed from our Python script creators
 // The following two functions will convert meters to latitude/longitude
@@ -144,14 +144,17 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 	sql::ResultSet *res;
 	prep_stmt = con->prepareStatement(query);
 	res = prep_stmt->executeQuery();
-
-	// For every server result, turn it into a comma separated string and add it to the serverResult vector
+	
+	// For every server result, turn it into a string where attributes are separated by QUERY_STRING_DELIMITER
 	while (res->next()) {
 		//for each tuple result, we use getString("attribute") to retrieve the data corrosponding to the attribute name
-		string currResult = res->getString("Place") + "," + 
-							res->getString("Lat") + "," + 
-							res->getString("Lng") + "," + 
-							res->getString("Types");
+		string currResult = res->getString("Place"); 
+		currResult += QUERY_STRING_DELIMITER; 
+		currResult += res->getString("Lat"); 
+		currResult += QUERY_STRING_DELIMITER; 
+		currResult += res->getString("Lng");
+		currResult += QUERY_STRING_DELIMITER;
+		currResult += res->getString("Types");
 
 		serverResult.push_back(currResult);
 		// cout << res->getString("Place") << "," << res->getString("Lat") << "," << res->getString("Lng") << "," << res->getString("Types") << endl;
@@ -176,7 +179,7 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 		tempPlace.type = "";
 
 		// Split the string by using the comma as a delimiter
-		vector<string> splitString = split(*resultIterator, ',');
+		vector<string> splitString = split(*resultIterator, QUERY_STRING_DELIMITER);
 
 		// Go through the split string and fill out the tempPlace attributes
 		int i = 0;
