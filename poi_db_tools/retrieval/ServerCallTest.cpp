@@ -156,6 +156,18 @@ void runLineSearchTests(ServerCall sc, bool printOutputs = true)
 	poi = sc.SearchByLine(34.05073240,-118.24543790,34.05648110,-118.24060620,50,5,"");
 	if(printOutputs)
 		printPlaceVector(poi);
+
+	cout << "Create Line Where End Coord is Far Away:" << endl;
+	poi.clear();
+	poi = sc.SearchByLine(34.05073240,-118.24543790,4.05648110,-18.24060620,500,5,"");
+	if(printOutputs)
+		printPlaceVector(poi);
+
+	cout << "Create Line Where Beginning Coord is Far Away:" << endl;
+	poi.clear();
+	poi = sc.SearchByLine(4.05073240,-18.24543790,34.05648110,-118.24060620,500,5,"");
+	if(printOutputs)
+		printPlaceVector(poi);
 }
 
 int main()

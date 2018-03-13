@@ -411,11 +411,12 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	for(int i = 0; i < numPlaces; i++)
 		numPOIs[i] = 0;
 
-	// For each area along the line
-	for(int i = 0; i < numPlaces; i++)
+	// We do a search at every point in the line
+	for(int i = 0; i < numPlaces; i++, currLong += longitudeStep, currLat += latitudeStep)
 	{
 		// Find a location at the current coordinate (finding extra if the backlog is non-zero)
 		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1 + backlogSize, filters);
+		cout << "BackLog: " << backlogSize << ", Lat: " << currLat << ", Long: " << currLong << endl;
 
 		// If a POI was found in this area
 		if(!currPlace.empty())
@@ -428,9 +429,6 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 
 			// Add the POI(s) to the output list
 			outputPlaces.insert(outputPlaces.end(), currPlace.begin(), currPlace.end());
-			// Move to the next coordinate in the line
-			currLong += longitudeStep;
-			currLat += latitudeStep;
 		}
 		// If a POI was not found in this area, we will attempt to search previous areas
 		// It will only do this if the backlogSize is 0, since if it is > 0, then it means we already failed
