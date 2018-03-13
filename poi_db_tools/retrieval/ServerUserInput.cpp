@@ -16,20 +16,34 @@ void printPlaceVector(vector<Place> v)
 	}
 }
 
-// Split by delimiter function obtained from: https://stackoverflow.com/questions/236129/the-most-elegant-way-to-iterate-the-words-of-a-string
-template<typename Out>
-void split2(const string &s, char delim, Out result) {
-    stringstream ss(s);
-    string item;
-    while (std::getline(ss, item, delim)) {
-        *(result++) = item;
+
+// Copy pasted from https://stackoverflow.com/questions/17750872/validating-a-double-in-c
+double getDouble () {
+    double x;
+    cin >> x;
+    // ver1: while( cin.fail() ) // or !cin.good()   no trailing char check.
+    while( cin.fail() || (cin.peek() != '\r' && cin.peek() != '\n'))
+    {
+        cout << "Invalid Input! Please input a numerical value." << endl;
+        cin.clear();
+        while( cin.get() != '\n' ); // or cin.ignore(1000, '\n');
+        cin >> x;
     }
+    return x;
 }
 
-vector<string> split2(const string &s, char delim) {
-    vector<string> elems;
-    split2(s, delim, back_inserter(elems));
-    return elems;
+int getInt () {
+    int x;
+    cin >> x;
+    // ver1: while( cin.fail() ) // or !cin.good()   no trailing char check.
+    while( cin.fail() || (cin.peek() != '\r' && cin.peek() != '\n'))
+    {
+        cout << "Invalid Input! Please input an integer." << endl;
+        cin.clear();
+        while( cin.get() != '\n' ); // or cin.ignore(1000, '\n');
+        cin >> x;
+    }
+    return x;
 }
 
 int main()
@@ -47,22 +61,21 @@ int main()
 		cout << endl << "Please select your search type:" << endl;
 		cout << "\tFor point search, type \'P\'" << endl;
 		cout << "\tFor line search, type \'L\'" << endl;
+		cout << "\tTo quit, type \'Q\'" << endl;
 		cin >> userInputString;
 		if(userInputString == "P")
 		{
-			cout << "Enter the Latitude,Longitude of your coordinate:" << endl;
-			cin >> userInputString;
-			splitString = split2(userInputString,',');
-			iLat = stod(splitString[0]);
-			iLong = stod(splitString[1]);
+			cout << "Enter the Latitude of your coordinate:" << endl;
+			iLat = getDouble();
+
+			cout << "Enter the Longitude of your coordinate:" << endl;
+			iLong = getDouble();
 
 			cout << "Enter the range of your search:" << endl;
-			cin >> userInputString;
-			sRange = stod(userInputString);
+			sRange = getDouble();
 
 			cout << "Enter the number of POIs desired:" << endl;
-			cin >> userInputString;
-			numPOIs = stoi(userInputString);
+			numPOIs = getInt();
 
 			cout << "Enter filter string (for no filter, type \'.\'):" << endl;
 			cin >> userInputString;
@@ -77,25 +90,23 @@ int main()
 		}
 		else if (userInputString == "L")
 		{
-			cout << "Enter the initial \"Latitude,Longitude\" of your coordinate:" << endl;
-			cin >> userInputString;
-			splitString = split2(userInputString,',');
-			iLat = stod(splitString[0]);
-			iLong = stod(splitString[1]);
+			cout << "Enter the latitude of your initial coordinate:" << endl;
+			iLat = getDouble();
 
-			cout << "Enter the end \"Latitude,Longitude\" of your coordinate:" << endl;
-			cin >> userInputString;
-			splitString = split2(userInputString,',');
-			eLat = stod(splitString[0]);
-			eLong = stod(splitString[1]);
+			cout << "Enter the longitude of your initial coordinate:" << endl;
+			iLong = getDouble();
+
+			cout << "Enter the latitude of your end coordinate:" << endl;
+			eLat = getDouble();
+
+			cout << "Enter the longitude of your end coordinate:" << endl;
+			eLong = getDouble();
 
 			cout << "Enter the range of your search:" << endl;
-			cin >> userInputString;
-			sRange = stod(userInputString);
+			sRange = getDouble();
 
 			cout << "Enter the number of POIs desired:" << endl;
-			cin >> userInputString;
-			numPOIs = stoi(userInputString);
+			numPOIs = getInt();
 
 			cout << "Enter filter string (for no filter, type \'.\')" << endl;
 			cin >> userInputString;
@@ -106,6 +117,10 @@ int main()
 
 			cout << endl << "Here are your results:" << endl;
 			printPlaceVector(poi);
+		}
+		else if (userInputString == "Q")
+		{
+			break;
 		}
 		else
 		{
