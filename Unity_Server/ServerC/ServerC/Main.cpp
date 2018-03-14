@@ -6,16 +6,16 @@ void serverLoop(void *);
 void clientLoop(void);
 
 GameServer * server;
-//ClientGame * client;
+
 int main()
 {
 	server = new GameServer();
-	// create thread with arbitrary argument for the run function
+	//create thread with arbitrary argument for the run function
+	//threads used to allow for multiple clients actions to run 
 	_beginthread(serverLoop, 0, (void*)12);
 
-	// initialize the client
-	//client = new ClientGame();
-	clientLoop();
+	
+	//clientLoop();
 
 }
 
@@ -30,7 +30,7 @@ void clientLoop()
 {
 	while (true)
 	{
-		//do game stuff
+		//If you want to update any game client stuff from the server end 
 		//will later run client->update();
 	}
 }

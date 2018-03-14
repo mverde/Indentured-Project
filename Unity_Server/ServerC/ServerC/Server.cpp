@@ -4,39 +4,37 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <ServerCall.h>
+//#include <ServerCall.h>
 
 Server::Server(void)
 {
-
-	// create WSADATA object
 	WSADATA wsaData;
 
-	// our sockets for the server
+	//sockets for the server
 	ListenSocket = INVALID_SOCKET;
 	ClientSocket = INVALID_SOCKET;
 
 
 
-	// address info for the server to listen to
+	//address to listen to 
 	struct addrinfo *result = NULL;
 	struct addrinfo hints;
 
-	// Initialize Winsock
+	//Initialize Winsock
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != 0) {
 		printf("WSAStartup failed with error: %d\n", iResult);
 		exit(1);
 	}
 
-	// set address information
+	//address info
 	ZeroMemory(&hints, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;    // TCP connection!!!
+	hints.ai_protocol = IPPROTO_TCP;    
 	hints.ai_flags = AI_PASSIVE;
 
-	// Resolve the server address and port
+	//result for address and port info - check for errors 
 	iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
 
 	if (iResult != 0) {
@@ -45,7 +43,7 @@ Server::Server(void)
 		exit(1);
 	}
 
-	// Create a SOCKET for connecting to server
+	//listening socket to connect to the server
 	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 
 	if (ListenSocket == INVALID_SOCKET) {
@@ -55,7 +53,7 @@ Server::Server(void)
 		exit(1);
 	}
 
-	// Set the mode of the socket to be nonblocking
+	//socket should be non blocking
 	u_long iMode = 1;
 	iResult = ioctlsocket(ListenSocket, FIONBIO, &iMode);
 
@@ -66,7 +64,7 @@ Server::Server(void)
 		exit(1);
 	}
 
-	// Setup the TCP listening socket
+	//TCP listen socket bind
 	iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
 
 	if (iResult == SOCKET_ERROR) {
@@ -77,10 +75,10 @@ Server::Server(void)
 		exit(1);
 	}
 
-	// no longer need address information
+	//free up memory 
 	freeaddrinfo(result);
 
-	// start listening for new clients attempting to connect
+	//look for new clients 
 	iResult = listen(ListenSocket, SOMAXCONN);
 
 	if (iResult == SOCKET_ERROR) {
@@ -92,10 +90,10 @@ Server::Server(void)
 }
 
 
-// accept new connections
+//For when a new client is attempting to connect
 bool Server::acceptNewClient(unsigned int & id)
 {
-	// if client waiting, accept the connection and save the socket
+	//if client waiting, accept the connection and save the socket
 	ClientSocket = accept(ListenSocket, NULL, NULL);
 
 	if (ClientSocket != INVALID_SOCKET)
@@ -104,7 +102,7 @@ bool Server::acceptNewClient(unsigned int & id)
 		char value = 1;
 		setsockopt(ClientSocket, IPPROTO_TCP, TCP_NODELAY, &value, sizeof(value));
 
-		// insert new client into session id table
+		//insert client into ID table 
 		sessions.insert(pair<unsigned int, SOCKET>(id, ClientSocket));
 
 		return true;
@@ -113,7 +111,10 @@ bool Server::acceptNewClient(unsigned int & id)
 	return false;
 }
 
-void Server::sendToAll(char * packets, int totalSize)
+
+//Used to send a message to every client
+//in future, will want to send the message only to the one who sent it
+void Server::sendMessageToEachClient(char * packets, int totalSize)
 {
 	SOCKET currentSocket;
 	std::map<unsigned int, SOCKET>::iterator iter;
@@ -132,22 +133,34 @@ void Server::sendToAll(char * packets, int totalSize)
 		}
 	}
 }
-// receive incoming data
+
+
+
+//Function for Receiving Messages from Client
+//We want to take the client's location (lat,long) along with any filters specified by the game
 int Server::receiveData(unsigned int client_id, char * recvbuf)
 {
+	//go through every client 
 	if (sessions.find(client_id) != sessions.end())
 	{
-		if (client_id == 0)
+		if (client_id == 0) //client 0 is the host 
 			return 0;
 		SOCKET currentSocket = sessions[client_id];
-		//iResult = SocketConnections::receiveMessage(currentSocket, recvbuf, MAX_PACKET_SIZE);
+
+		//call the Winsock method to place the message inside a buffer
 		iResult = SocketConnections::receiveMessage(currentSocket, recvbuf, MAX_PACKET_SIZE);
 		
+
+
+		//if a new message is ready 
 		if (strlen(recvbuf) != 0 && recvbuf[0]!='\0')
 		{
-			//char * buh = "30.1999999999223,32.29999230100";
+			//testing case: to make sure we can convert string to a double
+			//char * tempd = "30.19452,32.29412";
+			//string str(tempd);
+
+			//conver the coordinate to two doubles 
 			string str(recvbuf);
-			//string str(buh);
 			string lat = "";
 			string lon = "";
 			bool BeforeComma = true;
@@ -179,7 +192,10 @@ int Server::receiveData(unsigned int client_id, char * recvbuf)
 			const unsigned int packet_size = sizeof(Packet);
 
 
-			
+
+			//CALL C++ API HERE
+			//This is an example call from the Location Database Query 
+			/*
 			ServerCall test = ServerCall();
 			vector<Place> poi;
 			poi = test.SearchByCoordinate(latitude, longitude, 20000, 5, "");
@@ -187,18 +203,22 @@ int Server::receiveData(unsigned int client_id, char * recvbuf)
 			for (unsigned int i = 0; i < poi.size(); i++)
 			{
 				char * outsend = placeToString(poi[i]);
-				sendToAll(outsend, packet_size);
+				sendMessageToEachClient(outsend, packet_size);
 			}
-			
+			*/
 			//cout << endl;
-			//CALL C++ API HERE
 			cout << "got message from client: " << recvbuf << endl;
 			cout << "sending query response to client";
 			recvbuf[0] = '\0';
+
+
+			//Delete this later. Used for Demo/Testing
+			char * outsend = "Message Received. Here is a confirmation";
+			sendMessageToEachClient(outsend, packet_size);
 			
 		}
 
-		
+		//attempt to receive but client is no longer available 
 		if (iResult == 0)
 		{
 			printf("Connection closed\n");

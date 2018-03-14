@@ -14,22 +14,22 @@ public:
 	Server(void);
 	~Server(void);
 
-	// Socket to listen for new connections
+	//Socket to listen for clients 
 	SOCKET ListenSocket;
 
-	// Socket to give to the clients
+	//socket for clients to communicate through 
 	SOCKET ClientSocket;
 
-	// for error checking return values
+	//check error vals 
 	int iResult;
 
-	// table to keep track of each client's socket
+	//ID table 
 	std::map<unsigned int, SOCKET> sessions;
 
-	// accept new connections
+	
 	bool acceptNewClient(unsigned int & id);
 
 	int receiveData(unsigned int client_id, char * recvbuf);
-	void sendToAll(char * packets, int totalSize);
+	void sendMessageToEachClient(char * packets, int totalSize);
 };
 

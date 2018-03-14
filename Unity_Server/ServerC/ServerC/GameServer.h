@@ -16,11 +16,12 @@ public:
 
 private:
 
-	// IDs for the clients connecting for table in ServerNetwork 
+	
 	static unsigned int client_id;
 
-	// The ServerNetwork object 
+	//network data - memory info etc 
 	Server* network;
-	// data buffer
+	
+	//buffer
 	char network_data[MAX_PACKET_SIZE];
 };

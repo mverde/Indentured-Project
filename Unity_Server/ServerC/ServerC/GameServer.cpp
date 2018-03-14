@@ -1,44 +1,46 @@
 #include "GameServer.h"
 #include "NetworkData.h"
-#include <iostream>   // std::cout
+#include <iostream>   
 #include <string> 
 
 unsigned int GameServer::client_id;
 
 GameServer::GameServer(void)
 {
-	// id's to assign clients for our table
+	//client id is used to identify each client connected to the server
+	//cliend 0 is the host (server)
 	client_id = 0;
 
-	// set up the server network to listen 
+	//server object that will run and listen/store/do everything 
 	network = new Server();
 }
 
 void GameServer::update()
 {
 
-	// get new clients
+	//look for new clients. Update ID list if added another
 	if (network->acceptNewClient(client_id))
 	{
 		printf("client %d has been connected to the server\n", client_id);
 
 		client_id++;
 	}
+
+	//check if there is any info your clients wanted to send to the server
 	receiveFromClients();
-	//int retVal = recv
-		//ConnectionreceiveMessage(currentSocket, recvbuf, MAX_PACKET_SIZE);
+	
 }
 
 void GameServer::receiveFromClients()
 {
 	Packet packet;
 
-	// go through all clients
+	//iterate through all clients 
 	std::map<unsigned int, SOCKET>::iterator iter;
 
 	for (iter = network->sessions.begin(); iter != network->sessions.end(); iter++)
 	{
-		// get data for that client
+		//get the data from the client 
 		int data_length = network->receiveData(iter->first, network_data);
 
 	
