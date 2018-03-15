@@ -1,6 +1,6 @@
 // To compile locally: g++ ServerCall.cpp ServerCallTest.cpp -static-libstdc++ -o Test.exe
 // To compile on AWS: sudo g++ -std=c++0x -Wall -I/usr/include/cppconn -o TestCall ServerCall.cpp ServerCallTest.cpp -L/usr/lib -lmysqlcppconn
-// NOTE: This test script assumes the database was run around with coordinates of Lat: 34.0537136, Long: -118.24265330000003, Range > 250
+// NOTE: This test script assumes the database was run around with coordinates of Lat: 34.0232032 , Long: -118.4890448, Range > 2635
 
 #include "ServerCall.h"
 
@@ -36,7 +36,7 @@ void runRandomSelectionTests(ServerCall sc, bool printOutputs = true)
 	vector<Place> poi;
 
 	poi.clear();
-	poi = sc.SearchByCoordinate(34.0507,-118.24,500,15,"");
+	poi = sc.SearchByCoordinate(34.02,-118.49,500,15,"");
 
 	
 	cout << "Dataset used for random selection tests:" << endl;
@@ -114,33 +114,33 @@ void runCoordSearchTests(ServerCall sc, bool printOutputs = true)
 	cout << "Beginning Coordinate Search Tests:" << endl;
 	vector<Place> poi;
 
-	cout << "Return JiST cafe: " << endl;
+	cout << "Return IRON Fitness Santa Monica: " << endl;
 	poi.clear();
-	poi = sc.SearchByCoordinate(34.05077310,-118.24037730,1,1,"cafe,restaurant,food,point_of_interest,establishment");
+	poi = sc.SearchByCoordinate(34.02697630,-118.47932520,1,1,"gym,health,point_of_interest,establishment");
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Return 5 Locations:" << endl;
 	poi.clear();
-	poi = sc.SearchByCoordinate(34.05,-118.24,20,5,"");
+	poi = sc.SearchByCoordinate(34.02,-118.49,1000,5,"");
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Filter for 5 food places:" << endl;
 	poi.clear();
-	poi = sc.SearchByCoordinate(34.05,-118.24,20,5,"food");
+	poi = sc.SearchByCoordinate(34.02,-118.49,1000,5,"food");
 	if(printOutputs)
 		printPlaceVector(poi);
 	
 	cout << "Filter for 10 food or parking:" << endl;
 	poi.clear();
-	poi = sc.SearchByCoordinate(34.05,-118.24,20,10,"food|parking");
+	poi = sc.SearchByCoordinate(34.02,-118.49,1000,10,"food|parking");
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Filter for 10 food and cafe:" << endl;
 	poi.clear();
-	poi = sc.SearchByCoordinate(34.05,-118.24,20,10,"food,cafe");
+	poi = sc.SearchByCoordinate(34.02,-118.49,1000,10,"food,cafe");
 	if(printOutputs)
 		printPlaceVector(poi);
 
@@ -154,19 +154,19 @@ void runLineSearchTests(ServerCall sc, bool printOutputs = true)
 
 	cout << "Return Line of 5 Locations:" << endl;
 	poi.clear();
-	poi = sc.SearchByLine(34.05073240,-118.24543790,34.05648110,-118.24060620,50,5,"");
+	poi = sc.SearchByLine(34.02,-118.49,34.05648110,-118.24060620,2000,5,"");
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Create Line Where End Coord is Far Away:" << endl;
 	poi.clear();
-	poi = sc.SearchByLine(34.05073240,-118.24543790,4.05648110,-18.24060620,500,5,"");
+	poi = sc.SearchByLine(34.02,-118.49,4.05648110,-18.24060620,2000,5,"");
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Create Line Where Beginning Coord is Far Away:" << endl;
 	poi.clear();
-	poi = sc.SearchByLine(4.05073240,-18.24543790,34.05648110,-118.24060620,500,5,"");
+	poi = sc.SearchByLine(4.05073240,-18.24543790,34.02,-118.49,2000,5,"");
 	if(printOutputs)
 		printPlaceVector(poi);
 }
