@@ -196,7 +196,7 @@ def addToDB(array):
     cursor.execute('CREATE DATABASE IF NOT EXISTS escality_location_db');
     cursor.execute('USE escality_location_db')
     cursor.execute("DROP TABLE IF EXISTS pois")
-    cursor.execute("CREATE TABLE pois (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
+    cursor.execute("CREATE TABLE pois (place VARCHAR(100), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
     # ================= Parse array ================= #
     for entry in array:
