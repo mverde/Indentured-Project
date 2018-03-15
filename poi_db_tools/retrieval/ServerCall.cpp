@@ -100,7 +100,21 @@ ServerCall::ServerCall()
 	
 }
 
-// This function will get the locations in a square (edge length 2 * maxRange) around the specified coordinate
+vector<string> dummyServerResults()
+{
+	vector<string> serverResult;
+	serverResult.push_back("Place1,10.0,100.0,type1,type2,type8");
+	serverResult.push_back("Place2,12.0,102.0,type1,type3,type4,type5,type6");
+	serverResult.push_back("Place3,14.0,124.0,type1,type7,type9");
+	serverResult.push_back("Place4,16.0,126.0,type6,type3,type10,type8,type2");
+	serverResult.push_back("Place5,18.0,128.0,type9,type4,type3");
+	serverResult.push_back("Place6,20.0,130.0,type1,type6,type8");
+	serverResult.push_back("Place7,22.0,132.0,type12,type3,type4,type8,type10");
+
+	return serverResult;
+}
+
+// This function will get the locations in a square around the specified coordinate
 vector<Place> ServerCall::queryDatabase(double latitude, double longitude, double maxRange)
 {
 	if(maxRange < 1)
@@ -121,6 +135,7 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 					" and lng >= " +	to_string(lowLong) + 
 					" and lng <= " +	to_string(highLong);
 
+	//cout << query << endl;
 	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
 	vector<string> serverResult;
 
@@ -130,29 +145,62 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 	prep_stmt = con->prepareStatement(query);
 	res = prep_stmt->executeQuery();
 	
-	// dbPlaceVec will hold Places that were returned by the database query (filtering will happen later)
-	vector<Place> dbPlaceVec;
-
 	// For every server result, turn it into a string where attributes are separated by QUERY_STRING_DELIMITER
 	while (res->next()) {
-		// Create a Place item that will be filled with the data from the current server result item
-		Place tempPlace;
-		tempPlace.type = "";
-
 		//for each tuple result, we use getString("attribute") to retrieve the data corrosponding to the attribute name
-		tempPlace.name = res->getString("Place"); 
-		tempPlace.latitude = stod(res->getString("Lat")); 
+		string currResult = res->getString("Place"); 
+		currResult += QUERY_STRING_DELIMITER; 
+		currResult += res->getString("Lat"); 
+		currResult += QUERY_STRING_DELIMITER; 
+		currResult += res->getString("Lng");
+		currResult += QUERY_STRING_DELIMITER;
+		currResult += res->getString("Types");
 
-		tempPlace.longitude = stod(res->getString("Lng"));
-		tempPlace.type = res->getString("Types");
-
-		dbPlaceVec.push_back(tempPlace);
+		serverResult.push_back(currResult);
 		// cout << res->getString("Place") << "," << res->getString("Lat") << "," << res->getString("Lng") << "," << res->getString("Types") << endl;
 	}
 
 	// clean up
 	delete res;
 	delete prep_stmt;
+
+	// dbPlaceVec will hold Places that were returned by the database query (filtering will happen later)
+	vector<Place> dbPlaceVec;
+
+	// Iterate through every string in the database results
+	// This assumes that each string in serverResults follows the following format:
+	// "Place name,Latitude,Longitude,Type1,Type2,Type3,..."
+
+	vector<string>::iterator resultIterator, resultEnd = serverResult.end();
+	for(resultIterator = serverResult.begin(); resultIterator != resultEnd; ++resultIterator)
+	{
+		// Create a new Place
+		Place tempPlace;
+		tempPlace.type = "";
+
+		// Split the string by using the comma as a delimiter
+		vector<string> splitString = split(*resultIterator, QUERY_STRING_DELIMITER);
+
+		// Go through the split string and fill out the tempPlace attributes
+		int i = 0;
+		vector<string>::iterator stringIterator, stringEnd = splitString.end();
+		for(stringIterator = splitString.begin(); stringIterator != stringEnd; stringIterator++, i++)
+		{
+			if(i == 0)
+				tempPlace.name = *stringIterator;
+			else if (i == 1)
+				tempPlace.latitude = stod(*stringIterator);
+			else if (i == 2)
+				tempPlace.longitude = stod(*stringIterator);
+			else if (tempPlace.type == "")
+				tempPlace.type = *stringIterator;
+			else
+				tempPlace.type += "," + *stringIterator;
+		}
+
+		// Add the Place to the vector
+		dbPlaceVec.push_back(tempPlace);
+	}
 
 	return dbPlaceVec;
 }
@@ -269,12 +317,12 @@ vector<Place> ServerCall::randomSelectPlaces(vector<Place> places, int numPlaces
 }
 
 
-// SearchByCoordinate will find at most numPlaces that are within a square of side length 2*maxRange from the specified coordinate
+// SearchByCoordinate will find at most numPlaces that are in maxRange radius from the specified coordinate
 // Additionally, only places that satisfy the filters will be accepted in the output
 // This function will return a vector of Places that meet the requirements
-// If filters is empty (filters == ""), then filtering is disabled
+// If filters is empty (filters == ""), then filtering is not required
 // maxRangeIncr is used if you want to override the maximum extra range that the function will look in
-// maxRangeIncr is optional and default set to maxRangeIncrement = rangeIncrement * maxIncrementAttempts
+// maxRangeIncr is default set to maxRangeIncrement = rangeIncrement * maxIncrementAttempts
 vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, double maxRange, int numPlaces, string filters, double maxRangeIncr)
 {
 	// This is where we will store places that meet the required criteria
@@ -299,7 +347,7 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 	double currExtraRange = rangeIncrement;
 	unsigned int uint_numPlaces = (unsigned int) numPlaces;
 
-	// Will try up to get enough POIs to satisfy numPlaces (if there weren't enough found by the initial search)
+	// Will try up to maxIncrementAttempts times to get enough POIs to satisfy numPlaces
 	for(int i = 0; i < maxIncrementAttempts; i++, currExtraRange += rangeIncrement)
 	{
 		// If we have enough POIs or if we hit the maximum range extension, stop the loop
