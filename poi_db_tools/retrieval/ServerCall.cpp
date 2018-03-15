@@ -18,10 +18,9 @@ const int EARTH_RADIUS_METERS = 6371000;
 const double PI = 3.14159265358979;
 const double ONE_EIGHTY_DIV_PI = 180.0 / PI;
 const double PI_DIV_ONE_EIGHTY = PI / 180.0;
-const char QUERY_STRING_DELIMITER = '\035';
 
 // Conversion algorithms borrowed from our Python script creators
-// The following two functions will convert meters to latitude/longitude
+// The following functions will convert meters to latitude/longitude and vice versa
 double metersToLat(double meters)
 {
 	return (meters / EARTH_RADIUS_METERS) * ONE_EIGHTY_DIV_PI;
@@ -42,7 +41,7 @@ double longToMeters(double latitude, double longitude)
 	return (longitude * EARTH_RADIUS_METERS * PI_DIV_ONE_EIGHTY * cos(latitude * PI_DIV_ONE_EIGHTY));
 }
 
-// The following function will add two degree values
+// The following function will add two degree values and adjust for degree overflow
 double addDegrees(double d1, double d2)
 {
 	double newDegree = d1 + d2;
@@ -121,9 +120,6 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 					" and lng >= " +	to_string(lowLong) + 
 					" and lng <= " +	to_string(highLong);
 
-	// serverResult will contain strings that correspond to rows from the point of interest tables in the AWS server
-	vector<string> serverResult;
-
 	// Run the query on the server
 	sql::PreparedStatement *prep_stmt;
 	sql::ResultSet *res;
@@ -133,9 +129,8 @@ vector<Place> ServerCall::queryDatabase(double latitude, double longitude, doubl
 	// dbPlaceVec will hold Places that were returned by the database query (filtering will happen later)
 	vector<Place> dbPlaceVec;
 
-	// For every server result, turn it into a string where attributes are separated by QUERY_STRING_DELIMITER
+	// For every server result, create a Place object and fill it with the result data
 	while (res->next()) {
-		// Create a Place item that will be filled with the data from the current server result item
 		Place tempPlace;
 		tempPlace.type = "";
 
@@ -180,7 +175,7 @@ vector<Place> ServerCall::filterPlaces(vector<Place> places, string filters)
 	bool passesFilters;	
 	// Now we use the vector of vectors to filter the input places
 
-	// For each place in places
+	// For each place in places, check if it passes the filters
 	vector<Place>::iterator placesIterator, placesEnd = places.end();
 	for(placesIterator = places.begin(); placesIterator != placesEnd; placesIterator++)
 	{
@@ -223,19 +218,34 @@ vector<Place> ServerCall::filterPlaces(vector<Place> places, string filters)
 // This function will select numPlaces for a Place vector randomly
 vector<Place> ServerCall::randomSelectPlaces(vector<Place> places, int numPlaces)
 {
-	int selectedPlaceIndices [numPlaces];
-	
-	int vectorSize = places.size();
+	int placesSize = places.size();
 	// If we request more places than exist in our input vector, simply return the input vector
-	if(numPlaces >= vectorSize)
+	if(numPlaces >= placesSize)
 		return places;
-
-	// Fill with -1 to avoid issues when checking if an index already exists in the array
-	for(int i = 0; i < numPlaces; i++)
-		selectedPlaceIndices[i] = -1;
 
 	vector<Place> selectedPlaces;
 
+	// Creating a copy is important to avoid modifying the input vector
+	vector<Place> places_copy (places);
+
+	// On each iteration, select a Place, add it to the output vector, and remove it from the places_copy
+	for(int i = 0; i < numPlaces; i++)
+	{
+		int currIndex = rand() % places_copy.size();
+
+		selectedPlaces.push_back(places_copy[currIndex]);
+		places_copy.erase(places_copy.begin() + currIndex);
+
+	}
+
+	/*
+	int selectedPlaceIndices [numPlaces];
+	// Fill with -1 to avoid issues when checking if an index already exists in the array
+	for(int i = 0; i < numPlaces; i++)
+	selectedPlaceIndices[i] = -1;
+
+	// On each iteration, we will randomly select one of the indexes of places
+	// If we had already selected this index, we try again
 	for(int i = 0; i < numPlaces; i++)
 	{
 		// Will select one of the indices of our place vector
@@ -263,6 +273,7 @@ vector<Place> ServerCall::randomSelectPlaces(vector<Place> places, int numPlaces
 
 	for(int i = 0; i < numPlaces; i++)
 		selectedPlaces.push_back(places[selectedPlaceIndices[i]]);
+	*/
 
 	return selectedPlaces;
 
@@ -306,7 +317,7 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 		if(outputPlaces.size() >= uint_numPlaces || currExtraRange > maxRangeIncr)
 			break;
 
-		// Clear out the vectors
+		// If we reach this line, then there were not enough POIs in the original range, so we clear our vectors and try again
 		dbPlaceVec.clear();
 		outputPlaces.clear();
 
@@ -322,7 +333,6 @@ vector<Place> ServerCall::SearchByCoordinate(double latitude, double longitude, 
 			outputPlaces = dbPlaceVec;
 	}
 	
-
 	// Out of the remaining places that satisfy the filter, select up to numPlaces to return
 	outputPlaces = randomSelectPlaces(outputPlaces, numPlaces);
 
@@ -349,7 +359,7 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 
 	double currLat = initLatitude;
 	double currLong = initLongitude;
-	// Partition the longitude into (numPlaces - 1) since the initial coordinate will be used as the first location
+	// Partition the longitude into (numPlaces - 1) segments since the initial coordinate will be used as the first location
 	double longitudeStep = longitudeChange / (numPlaces - 1);
 	double latitudeStep = longitudeStep * slope;
 
