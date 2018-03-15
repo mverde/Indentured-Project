@@ -1,5 +1,6 @@
 // To compile locally: g++ ServerCall.cpp ServerCallTest.cpp -static-libstdc++ -o Test.exe
 // To compile on AWS: sudo g++ -std=c++0x -Wall -I/usr/include/cppconn -o TestCall ServerCall.cpp ServerCallTest.cpp -L/usr/lib -lmysqlcppconn
+// NOTE: This test script assumes the database was run around with coordinates of Lat: 34.0537136, Long: -118.24265330000003, Range > 250
 
 #include "ServerCall.h"
 
