@@ -416,7 +416,7 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	{
 		// Find a location at the current coordinate (finding extra if the backlog is non-zero)
 		vector<Place> currPlace = SearchByCoordinate(currLat, currLong, maxRange, 1 + backlogSize, filters);
-		cout << "BackLog: " << backlogSize << ", Lat: " << currLat << ", Long: " << currLong << endl;
+		//cout << "BackLog: " << backlogSize << ", Lat: " << currLat << ", Long: " << currLong << endl;
 
 		// If a POI was found in this area
 		if(!currPlace.empty())
