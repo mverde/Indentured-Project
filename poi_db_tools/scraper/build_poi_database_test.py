@@ -23,23 +23,37 @@ def test_longPlusMeters_positive_wraparound():
 def test_longPlusMeters_negative_wraparound():
     assert abs(bpdb.longPlusMeters(-180.0, 0.0, -110567) - 179.0) <= LAT_LONG_ERROR_MARGIN
 
+def test_getCertainTypesOfResults():
+    # Test that only places of certain type are returned
+    TYPES_OF_PLACES = ['bar', 'beauty_salon', 'bicycle_store', 'book_store', 'cafe', 'cemetery', 'gym', 'museum', 'parking']
+    results = bpdb.searchArea(34.0537136,-118.24265330000003, 500)
+    
+    for place in results:
+        foundPlace = False
+        for typeOfPlace in place['types']:
+            if(typeOfPlace in TYPES_OF_PLACES):
+                foundPlace = True
+
+    return foundPlace
+
+
 def test_createSearchGrid_invalid_radius():
     # Test that no grid is returned if radius < gridSquareRadius
     assert bpdb.createSearchGrid(0.0, 0.0, 1000, 10000) == []
 
 def test_getResults_no_next_page_token():
     # Test that there are <= 20 results
-    results = bpdb.getResults(34.0537136, -118.24265330000003, 10)
+    results = bpdb.getResults(34.0537136, -118.24265330000003, 10, 'bar')
     assert len(results) <= 20
 
 def test_getResults_one_next_page_token():
     # Test that there are between 20 and 40 results
-    results = bpdb.getResults(34.0537136, -118.24265330000003, 50)
+    results = bpdb.getResults(34.0537136, -118.24265330000003, 700, 'bar')
     assert len(results) >= 20 and len(results) <= 40
 
 def test_getResults_two_next_page_tokens():
     # Test that there are between 40 and 60 results
-    results = bpdb.getResults(34.0537136, -118.24265330000003, 200)
+    results = bpdb.getResults(34.0537136, -118.24265330000003, 1200, 'bar')
     assert len(results) >= 40 and len(results) <= 60
 
 
@@ -52,13 +66,16 @@ def test_createSearchGrid_creates_correct_grid():
     assert bpdb.createSearchGrid(0.0, 0.0, 1000, 1000) == dummyGridCenters
     
 def test_addToDB_connect():
-    #  ================= For Albert  ================= #
+    #  ================= For Testing with AWS  ================= #
+    # Uncomment the code below if running the script on AWS.
 
     db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                 user="escality_user",
                 passwd="12345678")
 
-    #  ================= For Melissa  ================= #
+    #  ================= For Local Testing  ================= #
+    # Uncomment the code below if testing on a local machine with MySQL.
+
     # db = pymysql.connect(host= "localhost",
     #                 user="root",
     #                 passwd="password")
@@ -74,16 +91,19 @@ def test_addToDB_connect():
    #  ================================================= #     
 def test_addToDB_add_data():
     bpdb.addToDB(DB_ARRAY)
-    #  ================= For Albert  ================= #
+    #  ================= For Testing with AWS  ================= #
+    # Uncomment the code below if running the script on AWS.
 
-    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-    #             user="escality_user",
-    #             passwd="12345678")
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+                user="escality_user",
+                passwd="12345678")
 
-    #  ================= For Melissa  ================= #
-    db = pymysql.connect(host= "localhost",
-                    user="root",
-                    passwd="password")
+    #  ================= For Local Testing  ================= #
+    # Uncomment the code below if testing on a local machine with MySQL.
+
+    # db = pymysql.connect(host= "localhost",
+    #                 user="root",
+    #                 passwd="password")
 
    #  ================================================= #       
     cursor = db.cursor()
