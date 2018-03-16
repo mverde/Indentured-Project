@@ -355,14 +355,17 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	// Otherwise, we need to split the line to have numPlaces locations
 	// Pretend latitude is a y value and longitude is an x value in a 2D coordinate plane
 	double longitudeChange = endLongitude - initLongitude;
-	double slope = (endLatitude - initLatitude) / longitudeChange;
+	double slope;
+	if(longitudeChange == 0)
+		slope = 0;
+	else
+		slope = (endLatitude - initLatitude) / longitudeChange;
 
 	double currLat = initLatitude;
 	double currLong = initLongitude;
 	// Partition the longitude into (numPlaces - 1) segments since the initial coordinate will be used as the first location
 	double longitudeStep = longitudeChange / (numPlaces - 1);
 	double latitudeStep = longitudeStep * slope;
-
 
 	// This variable is used in the case that the first locations didn't have enough POIs
 	// So it will try to make up by finding more POIs in future locations

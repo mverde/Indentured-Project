@@ -1,9 +1,8 @@
-// To compile locally: g++ ServerCall.cpp ServerCallTest.cpp -static-libstdc++ -o Test.exe
 // To compile on AWS: sudo g++ -std=c++0x -Wall -I/usr/include/cppconn -o TestCall ServerCall.cpp ServerCallTest.cpp -L/usr/lib -lmysqlcppconn
 // NOTE: This test script assumes the database was run around with coordinates of Lat: 34.0232032 , Long: -118.4890448, Range > 2635
 
 #include "ServerCall.h"
-
+#include <cassert>
 
 string placeToString(Place p)
 {
@@ -89,22 +88,26 @@ void runFilterTests(ServerCall sc, bool printOutputs = true)
 	poi = sc.filterPlaces(dummyPlaces,"type2");
 	if(printOutputs)
 		printPlaceVector(poi);
+	assert(poi.size() == 2);
 
 	cout << "Return Places of type2|type8:" << endl;
 	poi.clear();
 	poi = sc.filterPlaces(dummyPlaces,"type2|type8");
+	assert(poi.size() == 4);
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Return Places of type2,type8:" << endl;
 	poi.clear();
 	poi = sc.filterPlaces(dummyPlaces,"type2,type10");
+	assert(poi.size() == 1);
 	if(printOutputs)
 		printPlaceVector(poi);
 
 	cout << "Return Places of type50: (should be none)" << endl;
 	poi.clear();
 	poi = sc.filterPlaces(dummyPlaces,"type50");
+	assert(poi.size() == 0);
 	if(printOutputs)
 		printPlaceVector(poi);
 }
