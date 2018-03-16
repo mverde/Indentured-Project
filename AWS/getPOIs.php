@@ -29,10 +29,10 @@
     </tr>
     <tr>
       <td>
-        <input type="text" name="Select" maxlength="90" size="30" />
+        <input type="text" name="Select" maxlength="150" size="30" />
       </td>
        <td>
-        <input type="text" name="Where" maxlength="90" size="30" />
+        <input type="text" name="Where" maxlength="150" size="30" />
       </td>
       <td>
         <input type="submit" value="Submit Query" />

@@ -175,18 +175,22 @@ def addToDB(array):
     #input: locations array - add to db all at once    
     # db columns: index, place, coordinate(lat, longitude), type
 
-    # ================= Connect to DB ================= #
+    # ==================== Connect to DB ===================== #
 
-    #  ========== For Albert  ========== #
 
+    #  ========== For Testing with AWS  ========== #
+    # Uncomment the code below if running the script on AWS
     db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                     user="escality_user",
                     passwd="12345678")
 
-    #  ========= For Melissa  ========= #
+    #  ============ For Local Testing  =========== #
+    # Uncomment the code below if testing on a local machine with MySQL.
+
     # db = pymysql.connect(host= "localhost",
     #             user="root",
     #             passwd="password")
+
     #  ================= End Connect to DB  ================= #
 
     cursor = db.cursor()
@@ -196,7 +200,7 @@ def addToDB(array):
     cursor.execute('CREATE DATABASE IF NOT EXISTS escality_location_db');
     cursor.execute('USE escality_location_db')
     cursor.execute("DROP TABLE IF EXISTS pois")
-    cursor.execute("CREATE TABLE pois (place VARCHAR(70), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
+    cursor.execute("CREATE TABLE pois (place VARCHAR(100), lat DECIMAL(10, 8) NOT NULL, lng DECIMAL(11, 8) NOT NULL, types TEXT, PRIMARY KEY (place, lat, lng))")
 
     # ================= Parse array ================= #
     for entry in array:
@@ -253,6 +257,4 @@ def main():
     else:
         print ("Usage: search radius must be >= 250 meters")
 
-    # ================= Testing for Melissa  ================= #
-    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()

@@ -25,6 +25,35 @@
   }
 ?>
 
+<!-- Input form -->
+<form action="<?PHP echo $_SERVER['SCRIPT_NAME'] ?>" method="POST">
+  <table border="0">
+    <tr>
+      <td>Place</td>
+      <td>Lat</td>
+      <td>Lng</td>
+      <td>Types</td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" name="Place" maxlength="100" size="30" />
+      </td>
+      <td>
+        <input type="text" name="Lat" maxlength="20" size="30" />
+      </td>
+      <td>
+        <input type="text" name="Lng" maxlength="20" size="30" />
+      </td>
+      <td>
+        <input type="text" name="Types" maxlength="150" size="30" />
+      </td>
+      <td>
+        <input type="submit" value="Add POI" />
+      </td>
+    </tr>
+  </table>
+</form>
+
 <!-- Display table data. -->
 <table border="1" cellpadding="2" cellspacing="2">
   <tr>
@@ -63,6 +92,17 @@ while($query_data = mysqli_fetch_row($result)) {
 
 
 <?php
+
+function AddPoi($connection, $place, $lat, $lng, $types) {
+   $p = mysqli_real_escape_string($connection, $place);
+   $lat = mysqli_real_escape_string($connection, $lat);
+   $lng = mysqli_real_escape_string($connection, $lng);
+   $t = mysqli_real_escape_string($connection, $types);
+
+   $query = "INSERT INTO `pois` (`Place`, `Lat`, `Lng`, `Types`) VALUES ('$p', '$lat', '$lng', '$t');";
+
+   if(!mysqli_query($connection, $query)) echo("<p>Error adding poi data.</p>");
+}
 
 /* Check whether the table exists and, if not, create it. */
 function VerifyPOIsTable($connection, $dbName) {
