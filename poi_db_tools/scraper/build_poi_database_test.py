@@ -50,6 +50,16 @@ def test_createSearchGrid_creates_correct_grid():
                         (-0.0022483040147968265, 0.0022483039265172927)]
     assert bpdb.createSearchGrid(0.0, 0.0, 1000, 1000) == dummyGridCenters
     
+def test_getResults_no_next_page_token():
+    # Test that there are <= 20 results
+    results = bpdb.getResults(34.0537136, -118.24265330000003, 10, 'bar')
+    assert len(results) <= 20
+
+def test_getResults_two_next_page_tokens():
+    # Test that there are between 40 and 60 results
+    results = bpdb.getResults(34.0537136, -118.24265330000003, 1200, 'bar')
+    assert len(results) >= 40 and len(results) <= 60
+    
 def test_addToDB_connect():
     #  ================= For Testing with AWS  ================= #
     # Uncomment the code below if running the script on AWS.
