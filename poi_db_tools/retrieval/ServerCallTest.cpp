@@ -6,7 +6,7 @@
 
 string placeToString(Place p)
 {
-	return p.name + ", " + to_string(p.latitude) + ", " + to_string(p.longitude) + ", " + p.type;
+	return p.name + ":\n\t " + to_string(p.latitude) + ", " + to_string(p.longitude) + ", [" + p.type + "]";
 }
 
 void printStringVector(vector<string> v)

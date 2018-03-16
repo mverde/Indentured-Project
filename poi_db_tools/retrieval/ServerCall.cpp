@@ -371,10 +371,13 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 	// So it will try to make up by finding more POIs in future locations
 	int backlogSize = 0;
 
-	// Will store how many locations we use from each index
+	// Will store how many locations we use from each index and how much backlog was cleared by each index
 	unsigned int numPOIs[numPlaces];
-	for(int i = 0; i < numPlaces; i++)
+	unsigned  int backlogCleared[numPlaces];
+	for(int i = 0; i < numPlaces; i++){
 		numPOIs[i] = 0;
+		backlogCleared[i] = 0;
+	}
 
 	// We do a search at every point in the line
 	for(int i = 0; i < numPlaces; i++, currLong += longitudeStep, currLat += latitudeStep)
@@ -389,6 +392,7 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 			unsigned int numFound = currPlace.size();
 			// State how many POIs were found in this current location
 			numPOIs[i] = numFound;
+			backlogCleared[i] = (numFound - 1);
 			// Update the backlogSize
 			backlogSize -= (numFound - 1);
 
@@ -406,6 +410,7 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 			{
 				// If the area j found a POI, try to find an extra POI there
 				unsigned int numFound = numPOIs[j];
+
 				if(numFound != 0)
 				{
 					// Calculate the coordinates of the old location
@@ -418,12 +423,13 @@ vector<Place> ServerCall::SearchByLine(double initLatitude, double initLongitude
 					// If we successfully found an extra POI at this location
 					if(currPlace.size() == numFound + 1)
 					{
+						int numCleared = backlogCleared[j];
+						int currIndexStart = j - numCleared;
 						// To avoid adding the same location multiple times, we remove POIs found in this old area
 						for(unsigned int k = 0; k < numFound; k++)
-							outputPlaces.erase(outputPlaces.begin() + j);
+							outputPlaces.erase(outputPlaces.begin() + currIndexStart);
 
-						// Add the new POIs to the output list
-						outputPlaces.insert(outputPlaces.begin() + j, currPlace.begin(), currPlace.end());
+						outputPlaces.insert(outputPlaces.begin() + currIndexStart, currPlace.begin(), currPlace.end());
 						numPOIs[j]++;
 
 						// We now leave the loop since we found an extra POI here

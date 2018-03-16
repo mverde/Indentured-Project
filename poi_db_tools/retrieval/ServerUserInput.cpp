@@ -1,4 +1,4 @@
-// To compile on AWS: sudo g++ -std=c++0x -Wall -I/usr/include/cppconn -o TestUserInput ServerCall.cpp ServerUserInput.cpp -L/usr/lib -lmysqlcppconn
+// To compile on AWS: sudo g++ -std=c++0x -Wall -I/usr/include/cppconn -o UserInput ServerCall.cpp ServerUserInput.cpp -L/usr/lib -lmysqlcppconn
 
 #include "ServerCall.h"
 
