@@ -25,35 +25,6 @@
   }
 ?>
 
-<!-- Input form -->
-<form action="<?PHP echo $_SERVER['SCRIPT_NAME'] ?>" method="POST">
-  <table border="0">
-    <tr>
-      <td>Place</td>
-      <td>Lat</td>
-      <td>Lng</td>
-      <td>Types</td>
-    </tr>
-    <tr>
-      <td>
-        <input type="text" name="Place" maxlength="45" size="30" />
-      </td>
-      <td>
-        <input type="text" name="Lat" maxlength="90" size="60" />
-      </td>
-      <td>
-        <input type="text" name="Lng" maxlength="45" size="30" />
-      </td>
-      <td>
-        <input type="text" name="Types" maxlength="45" size="30" />
-      </td>
-      <td>
-        <input type="submit" value="Add Data" />
-      </td>
-    </tr>
-  </table>
-</form>
-
 <!-- Display table data. -->
 <table border="1" cellpadding="2" cellspacing="2">
   <tr>
@@ -93,18 +64,6 @@ while($query_data = mysqli_fetch_row($result)) {
 
 <?php
 
-/* Add an employee to the table. */
-function AddPoi($connection, $place, $lat, $lng, $types) {
-   $p = mysqli_real_escape_string($connection, $place);
-   $la = mysqli_real_escape_string($connection, $lat);
-   $ln = mysqli_real_escape_string($connection, $lng);
-   $t = mysqli_real_escape_string($connection, $types);
-
-   $query = "INSERT INTO `pois` (`Place`, `Lat`, `Lng`, `Types`) VALUES ('$p', '$la', '$ln', '$t');";
-
-   if(!mysqli_query($connection, $query)) echo("<p>Error adding poi data.</p>");
-}
-
 /* Check whether the table exists and, if not, create it. */
 function VerifyPOIsTable($connection, $dbName) {
   if(!TableExists("pois", $connection, $dbName)) 
@@ -134,4 +93,3 @@ function TableExists($tableName, $connection, $dbName) {
   return false;
 }
 ?>
-                

@@ -1,16 +1,29 @@
-EC2 INFORMATION (Use with the connection guides)
-########################################
+########################################################
+Ubuntu EC2 INFORMATION (Use with the connection guides)
+########################################################
 
 ec2 instance:
-i-0008b6251111e549d 
+i-0fc34abb0207a1318
 
 Public DNS:
-ec2-52-53-234-50.us-west-1.compute.amazonaws.com
+ec2-13-57-223-42.us-west-1.compute.amazonaws.com
+
+PuTTy Hostname:
+ubuntu@ec2-13-57-223-42.us-west-1.compute.amazonaws.com
+
+PuTTy Port:
+22
 
 User (default, same as in the guide below):
-ec2-user
+ubuntu
 
+MySQL Root User:
+pw: root
 
+Key File:
+escality-ubuntu-key-pair.pem (or .ppk for PuTTy)
+
+########################################
 RDS Information (For use within script)
 ########################################
 RDS Endpoint:
@@ -24,6 +37,27 @@ Password:
 
 DB Name:
 escality_location_db
+
+
+##################################################
+AMI EC2 INFORMATION (Outdated, do not use anymore)
+##################################################
+
+ec2 instance:
+i-0008b6251111e549d 
+
+Public DNS:
+ec2-52-53-234-50.us-west-1.compute.amazonaws.com
+
+User (default, same as in the guide below):
+ec2-user
+
+Key File:
+escality-location-key-pair
+
+
+#################################################################################################
+
 
 How to connect:
 - Via SSH:

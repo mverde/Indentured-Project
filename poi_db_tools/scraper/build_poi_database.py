@@ -27,6 +27,7 @@ DEFAULT_GRID_SQUARE_LENGTH_METERS = milesToMeters(0.13)
 DEFAULT_SEARCH_RADIUS_MILES = 12.427424
 DEFAULT_SEARCH_RADIUS_METERS = milesToMeters(DEFAULT_SEARCH_RADIUS_MILES)
 EARTH_RADIUS_METERS = 6371000
+TYPES_OF_PLACES = ['bar', 'beauty_salon', 'bicycle_store', 'book_store', 'cafe', 'cemetery', 'gym', 'museum', 'parking']
 
 '''
 Functions to get new latitude and longitude coordinates by adding meters to 
@@ -71,11 +72,24 @@ def createSearchGrid(centerLat, centerLong, radius, gridSquareLength):
     
     return gridCenters
         
-def getResults(lat, long, searchRadius):
+def getCertainTypesOfResults(lat, long, searchRadius):
+    
+    returnPlaces = []
+
+    for placeType in TYPES_OF_PLACES:
+        tempResults = getResults(lat, long, searchRadius, placeType)
+        if len(tempResults) > 0:
+            returnPlaces.append(getResults(lat, long, searchRadius, placeType))
+
+    return returnPlaces
+
+
+def getResults(lat, long, searchRadius, typeOfPlace):
     # helper function to return the list of places; there can be overlap. 
 
+
     places = []
-    places1 = gmaps.places_nearby(location=(lat,long), radius=searchRadius)
+    places1 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, type=typeOfPlace)
 
     for place in places1['results']:
         places.append(place)
@@ -88,11 +102,11 @@ def getResults(lat, long, searchRadius):
         while(x < 50):
             try:
                 next_page = places1['next_page_token'].encode('ascii','ignore')
-                places2 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
+                places2 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, type=typeOfPlace, page_token = next_page)
                 
                 for place in places2['results']:
                     places.append(place)
-                
+
                 x += 1
 
                 if('next_page_token' in places2):
@@ -100,7 +114,7 @@ def getResults(lat, long, searchRadius):
                     while(y < 50):
                         try:
                             next_page = places2['next_page_token'].encode('ascii','ignore')
-                            places3 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, page_token = next_page)
+                            places3 = gmaps.places_nearby(location=(lat,long), radius=searchRadius, type=typeOfPlace, page_token = next_page)
                             
                             for place in places3['results']:
                                 places.append(place)
@@ -122,7 +136,12 @@ def getResults(lat, long, searchRadius):
                 continue
     else:
         #print ("There is no next page token for places 1, end results.")
+        # for item in places:
+        #     print("places results for type: ", typeOfPlace, "\n", item)
         return places
+
+    # for item in places:
+    #     print("places results for type: ", typeOfPlace, "\n", item)
 
     return places
 
@@ -137,17 +156,19 @@ def searchArea(latitude, longitude, radius=DEFAULT_SEARCH_RADIUS_METERS, gridSqu
     locations = []
     
     for gridCenter in searchGrid:
-        print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
-        locations += getResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
+        # print ("Grid Center: ", str(gridCenter[0]) + ',' + str(gridCenter[1]))
+        locations += getCertainTypesOfResults(gridCenter[0], gridCenter[1], gridSquareSearchRadius)
     
-    # for item in locations:
-    #     print (item)
+    results = []
 
-    return locations
+    for item in locations:
+        for loc in item:
+            results.append(loc)
 
-def filterResults(results):
-    # return results of type x,y,z 
-    return 0
+    # for x in results:
+    #     print(x['name'])
+
+    return results
 
 
 def addToDB(array):
@@ -229,7 +250,7 @@ def main():
     centerLong = float(sys.argv[2])
     searchRadius = float(sys.argv[3])
 
-    # searchArea(centerLat, centerLong, searchRadius)
+    searchArea(centerLat, centerLong, searchRadius)
     
     if searchRadius >= 250:
         addToDB(searchArea(centerLat, centerLong, searchRadius))
