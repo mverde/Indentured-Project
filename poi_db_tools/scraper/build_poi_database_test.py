@@ -52,13 +52,16 @@ def test_createSearchGrid_creates_correct_grid():
     assert bpdb.createSearchGrid(0.0, 0.0, 1000, 1000) == dummyGridCenters
     
 def test_addToDB_connect():
-    #  ================= For Albert  ================= #
+    #  ================= For Testing with AWS  ================= #
+    # Uncomment the code below if running the script on AWS.
 
     db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                 user="escality_user",
                 passwd="12345678")
 
-    #  ================= For Melissa  ================= #
+    #  ================= For Local Testing  ================= #
+    # Uncomment the code below if testing on a local machine with MySQL.
+
     # db = pymysql.connect(host= "localhost",
     #                 user="root",
     #                 passwd="password")
@@ -74,16 +77,19 @@ def test_addToDB_connect():
    #  ================================================= #     
 def test_addToDB_add_data():
     bpdb.addToDB(DB_ARRAY)
-    #  ================= For Albert  ================= #
+    #  ================= For Testing with AWS  ================= #
+    # Uncomment the code below if running the script on AWS.
 
-    # db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
-    #             user="escality_user",
-    #             passwd="12345678")
+    db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
+                user="escality_user",
+                passwd="12345678")
 
-    #  ================= For Melissa  ================= #
-    db = pymysql.connect(host= "localhost",
-                    user="root",
-                    passwd="password")
+    #  ================= For Local Testing  ================= #
+    # Uncomment the code below if testing on a local machine with MySQL.
+
+    # db = pymysql.connect(host= "localhost",
+    #                 user="root",
+    #                 passwd="password")
 
    #  ================================================= #       
     cursor = db.cursor()

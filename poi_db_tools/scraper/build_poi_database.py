@@ -154,18 +154,22 @@ def addToDB(array):
     #input: locations array - add to db all at once    
     # db columns: index, place, coordinate(lat, longitude), type
 
-    # ================= Connect to DB ================= #
+    # ==================== Connect to DB ===================== #
 
-    #  ========== For Albert  ========== #
 
+    #  ========== For Testing with AWS  ========== #
+    # Uncomment the code below if running the script on AWS
     db = pymysql.connect(host= "escality-db-instance.cykpeyjjej2m.us-west-1.rds.amazonaws.com",
                     user="escality_user",
                     passwd="12345678")
 
-    #  ========= For Melissa  ========= #
+    #  ============ For Local Testing  =========== #
+    # Uncomment the code below if testing on a local machine with MySQL.
+
     # db = pymysql.connect(host= "localhost",
     #             user="root",
     #             passwd="password")
+
     #  ================= End Connect to DB  ================= #
 
     cursor = db.cursor()
@@ -232,6 +236,4 @@ def main():
     else:
         print ("Usage: search radius must be >= 250 meters")
 
-    # ================= Testing for Melissa  ================= #
-    # addToDB(getLocations((34.0537136,-118.24265330000003), 1)['results'])
 main()
