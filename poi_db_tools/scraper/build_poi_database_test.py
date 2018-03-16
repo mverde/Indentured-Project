@@ -41,21 +41,6 @@ def test_createSearchGrid_invalid_radius():
     # Test that no grid is returned if radius < gridSquareRadius
     assert bpdb.createSearchGrid(0.0, 0.0, 1000, 10000) == []
 
-def test_getResults_no_next_page_token():
-    # Test that there are <= 20 results
-    results = bpdb.getResults(34.0537136, -118.24265330000003, 10, 'bar')
-    assert len(results) <= 20
-
-def test_getResults_one_next_page_token():
-    # Test that there are between 20 and 40 results
-    results = bpdb.getResults(34.0537136, -118.24265330000003, 700, 'bar')
-    assert len(results) >= 20 and len(results) <= 40
-
-def test_getResults_two_next_page_tokens():
-    # Test that there are between 40 and 60 results
-    results = bpdb.getResults(34.0537136, -118.24265330000003, 1200, 'bar')
-    assert len(results) >= 40 and len(results) <= 60
-
 
 def test_createSearchGrid_creates_correct_grid():
     # Test that grid centers are correctly spaced from each other and cover the correct area
