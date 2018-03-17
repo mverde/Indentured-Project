@@ -1,5 +1,6 @@
 #include "GameServer.h"
 #include <process.h>
+#include <iostream>
 
 
 void serverLoop(void *);
@@ -15,7 +16,7 @@ int main()
 	_beginthread(serverLoop, 0, (void*)12);
 
 	
-	//clientLoop();
+	clientLoop();
 
 }
 
@@ -23,6 +24,7 @@ void serverLoop(void * arg)
 {
 	while (true)
 	{
+		//cout << "guh";
 		server->update();
 	}
 }
